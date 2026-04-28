@@ -1,0 +1,77 @@
+.root {
+  min-height: 100vh;
+  background: var(--bg0);
+}
+
+.main {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.metricGrid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.lineGrid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.twoCol {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 12px;
+}
+
+.placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  background: var(--bg2);
+  border: 1px dashed var(--border2);
+  border-radius: 10px;
+  text-align: center;
+}
+.placeholderIcon {
+  font-size: 32px;
+  margin-bottom: 12px;
+}
+.placeholderTitle {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--txt);
+  margin-bottom: 6px;
+}
+.placeholderSub {
+  font-size: 12px;
+  color: var(--txt3);
+}
+
+@media (max-width: 900px) {
+  .metricGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .lineGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .twoCol {
+    grid-template-columns: 1fr;
+  }
+}
+@media (max-width: 600px) {
+  .metricGrid {
+    grid-template-columns: 1fr 1fr;
+  }
+  .lineGrid {
+    grid-template-columns: 1fr;
+  }
+}
