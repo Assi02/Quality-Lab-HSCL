@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:sans-serif;background:#f4f6f9;color:#1a1a2e;font-size:14px}
+.header{background:linear-gradient(135deg,#1a1a2e,#16213e);color:#fff;padding:18px 24px;display:flex;align-items:center;justify-content:space-between}
+.header h1{font-size:18px;font-weight:600;letter-spacing:.3px}
+.header span{font-size:12px;opacity:.7}
+.container{padding:20px 24px}
+.filters{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:20px;background:#fff;padding:14px 16px;border-radius:10px;box-shadow:0 1px 4px rgba(0,0,0,.07)}
+.filters label{font-size:11px;font-weight:600;color:#555;display:block;margin-bottom:3px;text-transform:uppercase;letter-spacing:.4px}
+.filters select{padding:6px 10px;border:1px solid #dde1e9;border-radius:6px;font-size:13px;background:#fff;color:#1a1a2e;cursor:pointer;min-width:160px}
+.filters select:focus{outline:none;border-color:#4361ee}
+.filter-group{display:flex;flex-direction:column}
+.btn-reset{padding:6px 14px;background:#4361ee;color:#fff;border:none;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;align-self:flex-end;margin-top:18px}
+.btn-reset:hover{background:#3451d1}
+.btn-dl{padding:6px 16px;background:#06d6a0;color:#fff;border:none;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;align-self:flex-end;margin-top:18px}
+.btn-dl:hover{background:#04b889}
+.kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px}
+.kpi{background:#fff;border-radius:10px;padding:16px 18px;box-shadow:0 1px 4px rgba(0,0,0,.07);border-left:4px solid #4361ee}
+.kpi.k2{border-left-color:#f72585}.kpi.k3{border-left-color:#4cc9f0}.kpi.k4{border-left-color:#7209b7}
+.kpi-label{font-size:11px;color:#888;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;font-weight:600}
+.kpi-val{font-size:26px;font-weight:700;color:#1a1a2e}
+.kpi-sub{font-size:11px;color:#aaa;margin-top:3px}
+.charts-row{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
+.chart-box{background:#fff;border-radius:10px;padding:16px 18px;box-shadow:0 1px 4px rgba(0,0,0,.07)}
+.chart-title{font-size:13px;font-weight:700;color:#1a1a2e;margin-bottom:14px;padding-bottom:8px;border-bottom:1px solid #f0f0f0;display:flex;justify-content:space-between;align-items:center}
+.chart-wrap{position:relative;width:100%}
+.table-box{background:#fff;border-radius:10px;padding:16px 18px;box-shadow:0 1px 4px rgba(0,0,0,.07);margin-bottom:20px;overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:12px}
+th{background:#f8f9fc;color:#555;font-weight:700;padding:9px 10px;text-align:left;border-bottom:2px solid #eee;white-space:nowrap;font-size:11px;text-transform:uppercase;letter-spacing:.3px}
+td{padding:8px 10px;border-bottom:1px solid #f4f4f4;color:#333;vertical-align:middle}
+tr:hover td{background:#f8f9fd}
+.badge{display:inline-block;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700;background:#e8f4fd;color:#1a78c2}
+.badge-grade{background:#fff3e0;color:#e65100}
+.status-awaited{background:#fff8e1;color:#f57c00;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700}
+.no-data{text-align:center;padding:30px;color:#aaa;font-style:italic}
+.summary-row td{font-weight:700;background:#f0f4ff;color:#4361ee}
+</style>
+</head>
+<body>
+<div id="lock-screen" style="position:fixed;inset:0;background:linear-gradient(135deg,#1a1a2e,#16213e);display:flex;align-items:center;justify-content:center;z-index:9999">
+  <div style="background:#fff;border-radius:16px;padding:40px 36px;width:340px;box-shadow:0 20px 60px rgba(0,0,0,.4);text-align:center">
+    <div style="font-size:36px;margin-bottom:12px">🔒</div>
+    <h2 style="font-size:18px;font-weight:700;color:#1a1a2e;margin-bottom:4px">Carbon Black Dashboard</h2>
+    <p style="font-size:12px;color:#888;margin-bottom:24px">FY 2025–26 · Restricted Access</p>
+    <input id="pwd-input" type="password" placeholder="Enter password" style="width:100%;padding:10px 14px;border:1.5px solid #dde1e9;border-radius:8px;font-size:14px;outline:none;margin-bottom:10px;box-sizing:border-box" onkeydown="if(event.key==='Enter')checkPwd()">
+    <div id="pwd-err" style="font-size:12px;color:#e63946;margin-bottom:10px;min-height:16px"></div>
+    <button onclick="checkPwd()" style="width:100%;padding:10px;background:#4361ee;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer">Unlock</button>
+  </div>
+</div>
+<div class="header">
+  <div>
+    <h1>Carbon Black — Sample Dispatch Dashboard</h1>
+    <span>FY 2025–26 &nbsp;|&nbsp; All statuses: Awaited</span>
+  </div>
+</div>
+<div class="container">
+<div class="filters">
+  <div class="filter-group"><label>Salesperson / Requester</label><select id="f-person"><option value="">All Salespersons / Requesters</option></select></div>
+  <div class="filter-group"><label>Grade</label><select id="f-grade"><option value="">All Grades</option></select></div>
+  <div class="filter-group"><label>Month (Dispatch)</label><select id="f-month"><option value="">All Months</option></select></div>
+  <div class="filter-group"><label>Customer</label><select id="f-customer"><option value="">All Customers</option></select></div>
+  <button class="btn-reset" onclick="resetFilters()">Reset Filters</button>
+  <button class="btn-dl" onclick="downloadExcel()">Download Excel</button>
+</div>
+
+<div class="kpi-grid">
+  <div class="kpi k1"><div class="kpi-label">Total Dispatches</div><div class="kpi-val" id="kpi1">0</div><div class="kpi-sub">Sample entries</div></div>
+  <div class="kpi k2"><div class="kpi-label">Salespersons / Requesters</div><div class="kpi-val" id="kpi2">0</div><div class="kpi-sub">&nbsp;</div></div>
+  <div class="kpi k3"><div class="kpi-label">Unique Customers</div><div class="kpi-val" id="kpi3">0</div><div class="kpi-sub">&nbsp;</div></div>
+  <div class="kpi k4"><div class="kpi-label">Total Weight (Kg)</div><div class="kpi-val" id="kpi4">0</div><div class="kpi-sub">Approx. dispatched</div></div>
+</div>
+
+<div class="charts-row">
+  <div class="chart-box">
+    <div class="chart-title">Dispatches by Salesperson / Requester <span style="font-size:11px;color:#aaa;font-weight:400">count</span></div>
+    <div class="chart-wrap" id="ch1-wrap"><canvas id="ch1"></canvas></div>
+  </div>
+  <div class="chart-box">
+    <div class="chart-title">Top Grades <span style="font-size:11px;color:#aaa;font-weight:400">frequency</span></div>
+    <div class="chart-wrap" style="height:300px"><canvas id="ch2"></canvas></div>
+  </div>
+</div>
+<div class="charts-row">
+  <div class="chart-box">
+    <div class="chart-title">Monthly Dispatch Trend <span style="font-size:11px;color:#aaa;font-weight:400">by dispatch date</span></div>
+    <div class="chart-wrap" style="height:220px"><canvas id="ch3"></canvas></div>
+  </div>
+  <div class="chart-box">
+    <div class="chart-title">Weight Dispatched by Salesperson / Requester (Kg) <span style="font-size:11px;color:#aaa;font-weight:400">approx.</span></div>
+    <div class="chart-wrap" style="height:220px"><canvas id="ch4"></canvas></div>
+  </div>
+</div>
+
+<div class="table-box">
+  <div class="chart-title">Detailed Dispatch Log <span id="row-count" style="font-size:11px;color:#aaa;font-weight:400"></span></div>
+  <table>
+    <thead>
+      <tr>
+        <th>#</th><th>Salesperson / Requester</th><th>Customer</th><th>Grade(s)</th><th>Qty</th><th>Qty (Kg)</th>
+        <th>Request Date</th><th>Dispatch Date</th>
+        <th title="Working days from Request Date to Dispatch Date (Sundays excluded)">Processing Days ⓘ</th>
+        <th title="Days elapsed since dispatch — waiting for customer feedback">Feedback Awaited (Days) ⓘ</th>
+        <th>Status</th>
+      </tr>
+    </thead>
+    <tbody id="tbl-body"></tbody>
+  </table>
+</div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script>
+// Each record now has a gradeKg map: {grade -> kg for that grade only}
+const RAW=[
+ {sn:1,s:"Shubhasish Roy",c:"Phoenix Conveyor Belt India Pvt Ltd",g:"N134",qty:"5",kg:5,gkg:{"N134":5},rd:"3-Apr-25",dd:"4-Apr-25",w:384},
+ {sn:2,s:"N.V. Pandiarajan",c:"Sundaram Industries Ltd",g:"RG223",qty:"5",kg:5,gkg:{"RG223":5},rd:"8-Apr-25",dd:"12-May-25",w:346},
+ {sn:3,s:"Nivedita Roy",c:"Rileys Pvt Ltd",g:"N220",qty:"20",kg:20,gkg:{"N220":20},rd:"8-Apr-25",dd:"25-Apr-25",w:363},
+ {sn:4,s:"Shubhasish Roy",c:"Misus Refractories & Allied Industries",g:"RG415",qty:"5",kg:5,gkg:{"RG415":5},rd:"11-Apr-25",dd:"14-Apr-25",w:374},
+ // 12 grades x 5 kg each = 60 kg
+ {sn:5,s:"Kane Henneke",c:"Chromascape",g:"N110/N115/N121/N134/N220/N234/N339/N347/N550/N650/N660/N774",qty:"5 Kg each",kg:60,gkg:{"N110":5,"N115":5,"N121":5,"N134":5,"N220":5,"N234":5,"N339":5,"N347":5,"N550":5,"N650":5,"N660":5,"N774":5},rd:"23-Apr-25",dd:"26-Jul-25",w:271},
+ {sn:6,s:"Subhadeep Chowdhury",c:"Shiodome City Center",g:"RG113",qty:"1",kg:1,gkg:{"RG113":1},rd:"25-Apr-25",dd:"15-May-25",w:343},
+ {sn:7,s:"Serge Klunder",c:"Fenzi Group Spa",g:"N772",qty:"1",kg:1,gkg:{"N772":1},rd:"2-May-25",dd:"9-May-25",w:349},
+ // single grade N134, 3 lots x 6 kg = 18 kg
+ {sn:8,s:"Serge Klunder",c:"Brisa Lastik Sanayi Ve Ticaret A.S.",g:"N134",qty:"3x6 Kg",kg:18,gkg:{"N134":18},rd:"2-May-25",dd:"10-Jun-25",w:317},
+ // 2 grades explicitly: N550-3kg, N326-2kg
+ {sn:9,s:"Roopak J Prakash",c:"Triton Valves Limited",g:"N550/N326",qty:"N550-3Kg, N326-2Kg",kg:5,gkg:{"N550":3,"N326":2},rd:"12-May-25",dd:"21-May-25",w:337},
+ {sn:10,s:"Shubhasish Roy",c:"Tega Industries Limited",g:"N234",qty:"5",kg:5,gkg:{"N234":5},rd:"14-May-25",dd:"12-Jun-25",w:315},
+ {sn:11,s:"Diptesh Mitkar",c:"Bhabha Atomic Research Center (BARC)",g:"N330",qty:"5",kg:5,gkg:{"N330":5},rd:"15-May-25",dd:"29-May-25",w:329},
+ {sn:12,s:"Carlos Linares",c:"Colormix Industria",g:"N326",qty:"5",kg:5,gkg:{"N326":5},rd:"20-May-25",dd:"23-May-25",w:335},
+ {sn:13,s:"Nivedita Roy",c:"Global Rubber",g:"N134",qty:"5",kg:5,gkg:{"N134":5},rd:"27-May-25",dd:"12-Jun-25",w:315},
+ // 3 grades x 25 kg each = 75 kg
+ {sn:14,s:"Serge Klunder",c:"HEXPOL Barberton",g:"N330/N550/RG315",qty:"25 Kg each",kg:75,gkg:{"N330":25,"N550":25,"RG315":25},rd:"3-Jun-25",dd:"27-Jul-25",w:270},
+ {sn:15,s:"Serge Klunder",c:"Continental Tires Slovakia s.r.o.",g:"N772",qty:"5",kg:5,gkg:{"N772":5},rd:"17-Jun-25",dd:"26-Jul-25",w:271},
+ // single grade RG227, 1 kg x 2 lots = 2 kg
+ {sn:16,s:"Serge Klunder",c:"Hexpol Compounding s.r.o.",g:"RG227",qty:"1 Kg x2",kg:2,gkg:{"RG227":2},rd:"23-Jun-25",dd:"10-Jul-25",w:287},
+ // 2 grades x 1 kg each = 2 kg
+ {sn:17,s:"Kane Henneke",c:"Procter Johnson",g:"N330/N772",qty:"1 Kg each",kg:2,gkg:{"N330":1,"N772":1},rd:"27-Jun-25",dd:"10-Jul-25",w:287},
+ {sn:18,s:"Diptesh Mitkar",c:"Vijay Rubber Mfg Co.",g:"N326",qty:"5",kg:5,gkg:{"N326":5},rd:"11-Jul-25",dd:"29-Jul-25",w:268},
+ {sn:19,s:"Serge Klunder",c:"ContiTech Power Transmission Group",g:"N330",qty:"25",kg:25,gkg:{"N330":25},rd:"14-Jul-25",dd:"18-Jul-25",w:279},
+ // single grade N339, 6 lots x 1 kg = 6 kg
+ {sn:20,s:"Serge Klunder",c:"Sumitomo Rubber Industries",g:"N339",qty:"6x1 Kg",kg:6,gkg:{"N339":6},rd:"22-Jul-25",dd:"12-Aug-25",w:254},
+ {sn:21,s:"Roopak J Prakash",c:"Velson Rubber Products",g:"RG223",qty:"3",kg:3,gkg:{"RG223":3},rd:"23-Jul-25",dd:"12-Aug-25",w:254},
+ // 7 grades x 1 kg each = 7 kg
+ {sn:22,s:"Carlos Linares",c:"Colormix Industria e Comercio de Pigmentos Ltda",g:"N220/N330/N550/N660/N772/N339/N762",qty:"1 Kg each",kg:7,gkg:{"N220":1,"N330":1,"N550":1,"N660":1,"N772":1,"N339":1,"N762":1},rd:"25-Jul-25",dd:"5-Aug-25",w:261},
+ {sn:23,s:"Serge Klunder",c:"Polyplast Muller GmbH & Co. KG",g:"N220",qty:"4",kg:4,gkg:{"N220":4},rd:"28-Jul-25",dd:"8-Aug-25",w:258},
+ // 2 grades x 2 kg each = 4 kg
+ {sn:24,s:"Baishakhi Mitra",c:"NI & Sons Wiring Solutions Pvt Ltd",g:"N330/N550",qty:"2 Kg each",kg:4,gkg:{"N330":2,"N550":2},rd:"29-Jul-25",dd:"4-Aug-25",w:262},
+ // 2 grades x 25 kg each = 50 kg
+ {sn:25,s:"Brad Donat",c:"HEXPOL Barberton",g:"RG223/RG315",qty:"25 Kg each",kg:50,gkg:{"RG223":25,"RG315":25},rd:"30-Jul-25",dd:"18-Oct-25",w:187},
+ {sn:26,s:"Nivedita Roy",c:"The Wheelworks Pvt Ltd",g:"N115",qty:"31",kg:31,gkg:{"N115":31},rd:"7-Aug-25",dd:"28-Aug-25",w:238},
+ {sn:27,s:"Shubhasish Roy",c:"Dalmiya Bharat Refractories Ltd (Birla Tyres)",g:"N121",qty:"5",kg:5,gkg:{"N121":5},rd:"12-Aug-25",dd:"1-Sep-25",w:234},
+ {sn:28,s:"Shubhasish Roy",c:"Vishva Vishal Refractory Ltd.",g:"RG415",qty:"5",kg:5,gkg:{"RG415":5},rd:"16-Aug-25",dd:"26-Aug-25",w:240},
+ {sn:29,s:"Ravi Kishen Sharma",c:"Vesuvius India Limited",g:"N220",qty:"2",kg:2,gkg:{"N220":2},rd:"18-Aug-25",dd:"26-Aug-25",w:240},
+ {sn:30,s:"Brad Donat",c:"HEXPOL Barberton",g:"RG535",qty:"25",kg:25,gkg:{"RG535":25},rd:"20-Aug-25",dd:"18-Oct-25",w:187},
+ {sn:31,s:"Brad Donat",c:"HEXPOL Dyersburg",g:"TG",qty:"25",kg:25,gkg:{"TG":25},rd:"25-Aug-25",dd:"18-Oct-25",w:187},
+ {sn:32,s:"Kane Henneke",c:"Saville & Whittle",g:"N326",qty:"2",kg:2,gkg:{"N326":2},rd:"29-Aug-25",dd:"18-Oct-25",w:187},
+ {sn:33,s:"Nivedita Roy",c:"PTE Compounding de Mexico S.A de C.V.",g:"RG223",qty:"25",kg:25,gkg:{"RG223":25},rd:"3-Sep-25",dd:"9-Oct-25",w:196},
+ {sn:34,s:"Ravi Kishen Sharma",c:"Copper Power Systems LLC",g:"RG545",qty:"40",kg:40,gkg:{"RG545":40},rd:"8-Sep-25",dd:"18-Sep-25",w:217},
+ // 2 grades, 6 lots x 1 kg each per grade = 6+6 = 12 kg
+ {sn:35,s:"Serge Klunder",c:"Sumitomo Rubber Industries",g:"N121/N134",qty:"6x1 Kg each grade",kg:12,gkg:{"N121":6,"N134":6},rd:"10-Sep-25",dd:"22-Oct-25",w:183},
+ {sn:36,s:"Jaidip Roy Choudhury",c:"Akino Commerce Pvt Ltd",g:"N326",qty:"1",kg:1,gkg:{"N326":1},rd:"18-Sep-25",dd:"28-Oct-25",w:177},
+ {sn:37,s:"Brad Donat",c:"Akwel Automotive",g:"RG535",qty:"10",kg:10,gkg:{"RG535":10},rd:"26-Sep-25",dd:"24-Nov-25",w:150},
+ {sn:38,s:"Diptesh Mitkar",c:"Industrial Polymers",g:"N550",qty:"5",kg:5,gkg:{"N550":5},rd:"3-Oct-25",dd:"13-Oct-25",w:192},
+ {sn:39,s:"Roopak J Prakash",c:"Jollyflex",g:"N121",qty:"2",kg:2,gkg:{"N121":2},rd:"9-Oct-25",dd:"15-Oct-25",w:190},
+ {sn:40,s:"Kane Henneke",c:"Quaker Color",g:"N326",qty:"3",kg:3,gkg:{"N326":3},rd:"10-Oct-25",dd:"22-Oct-25",w:183},
+ {sn:41,s:"Serge Klunder",c:"Standard Profil Spain S.A.",g:"RG223",qty:"125",kg:125,gkg:{"RG223":125},rd:"16-Oct-25",dd:"27-Oct-25",w:178},
+ {sn:42,s:"Kane Henneke",c:"Lehvoss Italia",g:"N326",qty:"1",kg:1,gkg:{"N326":1},rd:"22-Oct-25",dd:"28-Oct-25",w:177},
+ {sn:43,s:"Serge Klunder",c:"Continental Tires Slovakia s.r.o.",g:"N121",qty:"10",kg:10,gkg:{"N121":10},rd:"29-Oct-25",dd:"7-Nov-25",w:167},
+ // 2 grades x 25 kg each = 50 kg
+ {sn:44,s:"Serge Klunder",c:"Phoenix Compounding Technology GmbH",g:"N330/N339",qty:"25 Kg each",kg:50,gkg:{"N330":25,"N339":25},rd:"31-Oct-25",dd:"25-Nov-25",w:149},
+ {sn:45,s:"Brad Donat",c:"Cooper Standard Stratford Mixing",g:"RG315",qty:"25",kg:25,gkg:{"RG315":25},rd:"6-Nov-25",dd:"6-Nov-25",w:168},
+ {sn:46,s:"Shubhasish Roy",c:"Nicco Cables",g:"N550",qty:"5",kg:5,gkg:{"N550":5},rd:"7-Nov-25",dd:"25-Nov-25",w:149},
+ {sn:47,s:"Kane Henneke",c:"Colorbiotics LLC",g:"N330",qty:"5",kg:5,gkg:{"N330":5},rd:"20-Nov-25",dd:"16-Dec-25",w:128},
+ {sn:48,s:"Serge Klunder",c:"Comet Srl",g:"RG522",qty:"5",kg:5,gkg:{"RG522":5},rd:"24-Nov-25",dd:"10-Dec-25",w:134},
+ {sn:49,s:"Brad Donat",c:"Electron Beam Technologies",g:"RG223",qty:"5",kg:5,gkg:{"RG223":5},rd:"26-Nov-25",dd:"23-Dec-25",w:121},
+ {sn:50,s:"Shubhasish Roy",c:"Phoenix Conveyor Belt India Pvt Ltd",g:"N121",qty:"2",kg:2,gkg:{"N121":2},rd:"27-Nov-25",dd:"2-Dec-25",w:142},
+ // 2 grades x 5 kg each = 10 kg
+ {sn:51,s:"Diptesh Mitkar",c:"Polyrub Cooper",g:"RG535/RG227",qty:"5 Kg each",kg:10,gkg:{"RG535":5,"RG227":5},rd:"29-Nov-25",dd:"19-Dec-25",w:125},
+ {sn:52,s:"Nivedita Roy",c:"Multyway Chemicals (Pvt) Ltd",g:"N550",qty:"5",kg:5,gkg:{"N550":5},rd:"2-Dec-25",dd:"1-Jan-26",w:112},
+ {sn:53,s:"Carlos Linares",c:"Colormix Industria e Comercio de Pigmentos Ltda",g:"RG225",qty:"3",kg:3,gkg:{"RG225":3},rd:"13-Dec-25",dd:"24-Dec-25",w:120},
+ {sn:54,s:"Brad Donat",c:"Electron Beam Technologies",g:"N330",qty:"8",kg:8,gkg:{"N330":8},rd:"15-Dec-25",dd:"23-Dec-25",w:121},
+ {sn:55,s:"Ravi Kishen Sharma",c:"Vesuvius India Ltd",g:"JETEX 105",qty:"5",kg:5,gkg:{"JETEX 105":5},rd:"15-Dec-25",dd:"17-Dec-25",w:127},
+ {sn:56,s:"Serge Klunder",c:"Trelleborg Slovenija d.o.o.",g:"N220",qty:"4",kg:4,gkg:{"N220":4},rd:"15-Dec-25",dd:"19-Dec-25",w:125},
+ // single grade, 3x300gm = 0.9 kg
+ {sn:57,s:"Subhadeep Chowdhury",c:"Focus Chemical Sdn Bhd",g:"N326",qty:"3x300gm",kg:0.9,gkg:{"N326":0.9},rd:"18-Dec-25",dd:"31-Dec-25",w:113},
+ {sn:58,s:"Ravi Kishen Sharma",c:"Goodyear Development Center Kunshan",g:"VIRTEX 880",qty:"10",kg:10,gkg:{"VIRTEX 880":10},rd:"19-Dec-25",dd:"20-Dec-25",w:124},
+ // 2 grades x 25 kg each = 50 kg
+ {sn:59,s:"Ravi Kishen Sharma",c:"SSO International Forwarding Ltd",g:"N550/N772",qty:"25 Kg each",kg:50,gkg:{"N550":25,"N772":25},rd:"26-Dec-25",dd:"29-Dec-25",w:115},
+ {sn:60,s:"Serge Klunder",c:"Konimpex Dis Ticaret Ltd Sti",g:"N772",qty:"2",kg:2,gkg:{"N772":2},rd:"29-Dec-25",dd:"31-Dec-25",w:113},
+ {sn:61,s:"Baishakhi Mitra",c:"Blend Colours Pvt. Ltd",g:"N326",qty:"1",kg:1,gkg:{"N326":1},rd:"13-Jan-26",dd:"15-Jan-26",w:98},
+ {sn:62,s:"Kouyoh Trading Co.",c:"Saitama Gomu",g:"N550",qty:"25",kg:25,gkg:{"N550":25},rd:"20-Jan-26",dd:"21-Jan-26",w:92},
+ {sn:63,s:"Serge Klunder",c:"Phoenix Compounding Technology GmbH",g:"RG227K",qty:"5",kg:5,gkg:{"RG227K":5},rd:"20-Jan-26",dd:"27-Jan-26",w:86},
+ {sn:64,s:"Roopak J Prakash",c:"Classic Industries and Exports Ltd",g:"RG225K",qty:"2",kg:2,gkg:{"RG225K":2},rd:"27-Jan-26",dd:"2-Feb-26",w:80},
+ {sn:65,s:"Serge Klunder",c:"Bode GmbH",g:"RG225K",qty:"5",kg:5,gkg:{"RG225K":5},rd:"29-Jan-26",dd:"9-Feb-26",w:73},
+ // single grade, 3x300gm = 0.9 kg
+ {sn:66,s:"Subhadeep Chowdhury",c:"Focus Chemical Sdn Bhd",g:"N330",qty:"3x300gm",kg:0.9,gkg:{"N330":0.9},rd:"30-Jan-26",dd:"2-Feb-26",w:80},
+ {sn:67,s:"Serge Klunder",c:"Polymer-Technik Elbe GmbH",g:"N339",qty:"25",kg:25,gkg:{"N339":25},rd:"30-Jan-26",dd:"9-Feb-26",w:73},
+ {sn:68,s:"Shubhasish Roy",c:"DIC India Limited",g:"N326",qty:"2",kg:2,gkg:{"N326":2},rd:"31-Jan-26",dd:"2-Feb-26",w:80},
+ // 3 grades x 50 kg each = 150 kg
+ {sn:69,s:"Serge Klunder",c:"ContiTech GmbH",g:"N550/N772/N774",qty:"50 Kg each",kg:150,gkg:{"N550":50,"N772":50,"N774":50},rd:"7-Feb-26",dd:"23-Feb-26",w:59},
+ {sn:70,s:"Kouyoh Trading Co.",c:"Kouyoh Trading Co.",g:"N330",qty:"3",kg:3,gkg:{"N330":3},rd:"14-Feb-26",dd:"23-Feb-26",w:59},
+ // 2 grades x 10 kg each = 20 kg
+ {sn:71,s:"Pankaj Garg",c:"Apollo Tyres",g:"RG137/RG325",qty:"10 Kg each",kg:20,gkg:{"RG137":10,"RG325":10},rd:"19-Feb-26",dd:"20-Feb-26",w:62},
+ // 4 grades x 1 kg each = 4 kg
+ {sn:72,s:"Serge Klunder",c:"Oxerra Deutschland GmbH",g:"N326/N772/KLAREX RG535/KLAREX RG545",qty:"1 Kg each",kg:4,gkg:{"N326":1,"N772":1,"KLAREX RG535":1,"KLAREX RG545":1},rd:"19-Feb-26",dd:"5-Mar-26",w:49},
+ {sn:73,s:"Pankaj Garg",c:"Apollo Tyres",g:"N326",qty:"5",kg:5,gkg:{"N326":5},rd:"23-Feb-26",dd:"25-Feb-26",w:57},
+ {sn:74,s:"Keshav Kumar Sharma",c:"Ravasco Transmission & Packing Pvt. Ltd",g:"RG225K",qty:"5",kg:5,gkg:{"RG225K":5},rd:"27-Feb-26",dd:"2-Mar-26",w:52},
+ {sn:75,s:"Kane Henneke",c:"Impress Diseno Iberia",g:"N326",qty:"1",kg:1,gkg:{"N326":1},rd:"25-Feb-26",dd:"5-Mar-26",w:49},
+ {sn:76,s:"Kane Henneke",c:"Auxicolor S.L.",g:"N326",qty:"1",kg:1,gkg:{"N326":1},rd:"25-Feb-26",dd:"5-Mar-26",w:49},
+ {sn:77,s:"Kane Henneke",c:"Delta Tecnic S.A",g:"N326",qty:"1",kg:1,gkg:{"N326":1},rd:"25-Feb-26",dd:"5-Mar-26",w:49},
+ {sn:78,s:"Milos Boricic",c:"Chromos d.o.o.",g:"N234",qty:"1",kg:1,gkg:{"N234":1},rd:"27-Feb-26",dd:"2-Mar-26",w:52},
+ {sn:79,s:"Serge Klunder",c:"Sisan Plastik Sanayi",g:"N772",qty:"1",kg:1,gkg:{"N772":1},rd:"27-Feb-26",dd:"7-Mar-26",w:47},
+ // 2 grades x 2 kg each = 4 kg
+ {sn:80,s:"Nikhil Nitanawre",c:"Soujanya Color Pvt. Ltd",g:"N330/N326",qty:"2 Kg each",kg:4,gkg:{"N330":2,"N326":2},rd:"17-Mar-26",dd:"30-Mar-26",w:24},
+ // 2 grades x 1 kg each = 2 kg
+ {sn:81,s:"Ravi Kishen Sharma",c:"RTP",g:"N762/N660",qty:"1 Kg each",kg:2,gkg:{"N762":1,"N660":1},rd:"17-Mar-26",dd:"30-Mar-26",w:24},
+ // 2 grades x 1 kg each = 2 kg
+ {sn:82,s:"Keshav Kumar Sharma",c:"Hartex Rubber",g:"N550/N660",qty:"1 Kg each",kg:2,gkg:{"N550":1,"N660":1},rd:"17-Mar-26",dd:"30-Mar-26",w:24},
+ {sn:83,s:"Shubhasish Roy",c:"BTL",g:"N550",qty:"2",kg:2,gkg:{"N550":2},rd:"17-Mar-26",dd:"18-Mar-26",w:36},
+ {sn:84,s:"Biswajit Pal",c:"BTL",g:"N660",qty:"2",kg:2,gkg:{"N660":2},rd:"19-Mar-26",dd:"20-Mar-26",w:34},
+ {sn:85,s:"Shubhasish Roy",c:"BTL",g:"N134",qty:"3",kg:3,gkg:{"N134":3},rd:"20-Mar-26",dd:"23-Mar-26",w:31},
+ {sn:86,s:"Shubhasish Roy",c:"Phoenix Conveyor Belt India Pvt Ltd",g:"N121",qty:"2",kg:2,gkg:{"N121":2},rd:"23-Mar-26",dd:"26-Mar-26",w:28},
+ {sn:87,s:"Alok Narayan",c:"Toyoda Gosei Uno Minda India Pvt. Ltd. (TGUMI)",g:"RG535K",qty:"5",kg:5,gkg:{"RG535K":5},rd:"27-Mar-26",dd:"30-Mar-26",w:24},
+ // 3 grades x 1 kg each = 3 kg
+ {sn:88,s:"Milos Boricic",c:"Tesis d.o.o.",g:"N330/N666/N550",qty:"1 Kg each",kg:3,gkg:{"N330":1,"N666":1,"N550":1},rd:"31-Mar-26",dd:"8-Apr-26",w:15}
+];
+
+const MONTH_ORDER=["Apr-25","May-25","Jun-25","Jul-25","Aug-25","Sep-25","Oct-25","Nov-25","Dec-25","Jan-26","Feb-26","Mar-26","Apr-26"];
+const COLORS=["#4361ee","#f72585","#4cc9f0","#7209b7","#3a0ca3","#e63946","#06d6a0","#118ab2","#ffd166","#ef476f","#073b4c","#2d6a4f","#52b788","#f4a261","#480ca8","#560bad"];
+
+function parseDate(dstr){
+  try{
+    const months={Jan:0,Feb:1,Mar:2,Apr:3,May:4,Jun:5,Jul:6,Aug:7,Sep:8,Oct:9,Nov:10,Dec:11};
+    const p=dstr.trim().split("-");
+    return new Date(parseInt(p[2])<100?2000+parseInt(p[2]):parseInt(p[2]),months[p[1].substring(0,3)],parseInt(p[0]));
+  }catch(e){return null;}
+}
+
+function workingDays(d1s,d2s){
+  const s=parseDate(d1s),e=parseDate(d2s);
+  if(!s||!e||e<=s)return 0;
+  let count=0,cur=new Date(s);
+  cur.setDate(cur.getDate()+1);
+  while(cur<=e){if(cur.getDay()!==0)count++;cur.setDate(cur.getDate()+1);}
+  return count;
+}
+
+function getMonth(dstr){
+  try{const d=parseDate(dstr);return d.toLocaleString("en-GB",{month:"short",year:"2-digit"}).replace(" ","-");}catch(e){return "";}
+}
+
+// Returns effective kg for a record given the active grade filter
+function effectiveKg(r, gradeFilter){
+  if(!gradeFilter) return r.kg;
+  return r.gkg[gradeFilter] || 0;
+}
+
+let charts={}, filtered=[...RAW], activeGrade="";
+
+function populateFilters(){
+  const pSel=document.getElementById("f-person");
+  [...new Set(RAW.map(r=>r.s))].sort().forEach(p=>{const o=document.createElement("option");o.value=p;o.textContent=p;pSel.appendChild(o);});
+
+  const allG=new Set();
+  RAW.forEach(r=>r.g.split("/").forEach(g=>allG.add(g.trim())));
+  const gSel=document.getElementById("f-grade");
+  [...allG].sort().forEach(g=>{const o=document.createElement("option");o.value=g;o.textContent=g;gSel.appendChild(o);});
+
+  const months=new Set(RAW.map(r=>getMonth(r.dd)));
+  const mSel=document.getElementById("f-month");
+  MONTH_ORDER.filter(m=>months.has(m)).forEach(m=>{const o=document.createElement("option");o.value=m;o.textContent=m;mSel.appendChild(o);});
+
+  const cSel=document.getElementById("f-customer");
+  [...new Set(RAW.map(r=>r.c))].sort().forEach(c=>{const o=document.createElement("option");o.value=c;o.textContent=c;cSel.appendChild(o);});
+
+  ["f-person","f-grade","f-month","f-customer"].forEach(id=>document.getElementById(id).addEventListener("change",applyFilters));
+}
+
+function applyFilters(){
+  const p=document.getElementById("f-person").value;
+  activeGrade=document.getElementById("f-grade").value;
+  const m=document.getElementById("f-month").value;
+  const c=document.getElementById("f-customer").value;
+  filtered=RAW.filter(r=>{
+    if(p&&r.s!==p)return false;
+    if(activeGrade&&!r.g.split("/").map(x=>x.trim()).includes(activeGrade))return false;
+    if(m&&getMonth(r.dd)!==m)return false;
+    if(c&&r.c!==c)return false;
+    return true;
+  });
+  updateAll();
+}
+
+function resetFilters(){
+  ["f-person","f-grade","f-month","f-customer"].forEach(id=>document.getElementById(id).value="");
+  activeGrade=""; filtered=[...RAW]; updateAll();
+}
+
+function updateKPIs(){
+  document.getElementById("kpi1").textContent=filtered.length;
+  document.getElementById("kpi2").textContent=new Set(filtered.map(r=>r.s)).size;
+  document.getElementById("kpi3").textContent=new Set(filtered.map(r=>r.c)).size;
+  const total=filtered.reduce((a,r)=>a+effectiveKg(r,activeGrade),0);
+  document.getElementById("kpi4").textContent=Math.round(total).toLocaleString();
+}
+
+function destroyChart(id){if(charts[id]){charts[id].destroy();delete charts[id];}}
+
+function buildPersonChart(){
+  destroyChart("ch1");
+  const counts={};filtered.forEach(r=>counts[r.s]=(counts[r.s]||0)+1);
+  const sorted=Object.entries(counts).sort((a,b)=>b[1]-a[1]);
+  const h=Math.max(300,sorted.length*42+60);
+  document.getElementById("ch1-wrap").style.height=h+"px";
+  charts["ch1"]=new Chart(document.getElementById("ch1"),{
+    type:"bar",
+    data:{labels:sorted.map(e=>e[0]),datasets:[{label:"Dispatches",data:sorted.map(e=>e[1]),backgroundColor:sorted.map((_,i)=>COLORS[i%COLORS.length]),borderRadius:4}]},
+    options:{indexAxis:"y",responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>" "+c.raw+" samples"}}},scales:{x:{grid:{color:"rgba(0,0,0,.05)"},ticks:{stepSize:1}},y:{grid:{display:false},ticks:{font:{size:11}}}}}
+  });
+}
+
+function buildGradeChart(){
+  destroyChart("ch2");
+  const allG={};filtered.forEach(r=>r.g.split("/").forEach(g=>{const k=g.trim();allG[k]=(allG[k]||0)+1;}));
+  const sorted=Object.entries(allG).sort((a,b)=>b[1]-a[1]).slice(0,15);
+  charts["ch2"]=new Chart(document.getElementById("ch2"),{
+    type:"bar",
+    data:{labels:sorted.map(e=>e[0]),datasets:[{label:"Count",data:sorted.map(e=>e[1]),backgroundColor:"#4cc9f0",borderRadius:4}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{font:{size:10},maxRotation:45,autoSkip:false}},y:{grid:{color:"rgba(0,0,0,.05)"},ticks:{stepSize:1}}}}
+  });
+}
+
+function buildMonthChart(){
+  destroyChart("ch3");
+  const counts={};filtered.forEach(r=>{const m=getMonth(r.dd);if(m)counts[m]=(counts[m]||0)+1;});
+  const labels=MONTH_ORDER.filter(m=>counts[m]!==undefined);
+  charts["ch3"]=new Chart(document.getElementById("ch3"),{
+    type:"line",
+    data:{labels,datasets:[{label:"Dispatches",data:labels.map(m=>counts[m]),borderColor:"#f72585",backgroundColor:"rgba(247,37,133,.1)",fill:true,tension:.35,pointBackgroundColor:"#f72585",pointRadius:4}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{font:{size:10}}},y:{grid:{color:"rgba(0,0,0,.05)"},ticks:{stepSize:1}}}}
+  });
+}
+
+function buildWeightChart(){
+  destroyChart("ch4");
+  const sums={};
+  filtered.forEach(r=>sums[r.s]=(sums[r.s]||0)+effectiveKg(r,activeGrade));
+  const sorted=Object.entries(sums).sort((a,b)=>b[1]-a[1]);
+  charts["ch4"]=new Chart(document.getElementById("ch4"),{
+    type:"bar",
+    data:{labels:sorted.map(e=>e[0]),datasets:[{label:"Kg",data:sorted.map(e=>Math.round(e[1]*10)/10),backgroundColor:"#7209b7",borderRadius:4}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>" "+c.raw+" Kg"}}},scales:{x:{grid:{display:false},ticks:{font:{size:10},maxRotation:45}},y:{grid:{color:"rgba(0,0,0,.05)"}}}}
+  });
+}
+
+function buildTable(){
+  const tbody=document.getElementById("tbl-body");
+  tbody.innerHTML="";
+  document.getElementById("row-count").textContent=filtered.length+" records";
+  if(!filtered.length){tbody.innerHTML='<tr><td colspan="11" class="no-data">No records match the selected filters.</td></tr>';return;}
+  filtered.forEach((r,i)=>{
+    const proc=workingDays(r.rd,r.dd);
+    const dispKg=effectiveKg(r,activeGrade);
+    const tr=document.createElement("tr");
+    tr.innerHTML=`<td>${i+1}</td>
+    <td><strong>${r.s}</strong></td>
+    <td style="max-width:160px;white-space:normal;font-size:11px">${r.c}</td>
+    <td style="max-width:140px;white-space:normal"><span class="badge badge-grade" style="font-size:9px">${r.g.replace(/\//g," / ")}</span></td>
+    <td style="white-space:nowrap;font-size:11px">${r.qty}</td>
+    <td style="font-weight:600;color:#4361ee">${activeGrade?dispKg+" ("+r.kg+" total)":r.kg}</td>
+    <td style="white-space:nowrap;font-size:11px">${r.rd}</td>
+    <td style="white-space:nowrap;font-size:11px">${r.dd}</td>
+    <td style="text-align:center;font-weight:600;color:#4361ee">${proc}</td>
+    <td style="text-align:center;font-weight:600;color:${r.w>300?"#e63946":r.w>150?"#f4a261":"#06d6a0"}">${r.w}</td>
+    <td><span class="status-awaited">Awaited</span></td>`;
+    tbody.appendChild(tr);
+  });
+  const totalKg=filtered.reduce((a,r)=>a+effectiveKg(r,activeGrade),0);
+  const tr=document.createElement("tr");
+  tr.className="summary-row";
+  tr.innerHTML=`<td colspan="5" style="text-align:right">TOTAL${activeGrade?" ("+activeGrade+" only)":""}</td><td>${Math.round(totalKg*10)/10} Kg</td><td colspan="5"></td>`;
+  tbody.appendChild(tr);
+}
+
+function updateAll(){updateKPIs();buildPersonChart();buildGradeChart();buildMonthChart();buildWeightChart();buildTable();}
+
+function downloadExcel(){
+  const wb=XLSX.utils.book_new();
+  const headers=["Sr. No.","Salesperson / Requester","Customer Name","Grade","Qty","Qty (Kg)","Request Date","Dispatched On","Processing Days (excl. Sundays)","Feedback Awaited (Days)","Status"];
+  const rows=RAW.map(r=>[r.sn,r.s,r.c,r.g.replace(/\//g,", "),r.qty,r.kg,r.rd,r.dd,workingDays(r.rd,r.dd),r.w,"Awaited"]);
+  const ws=XLSX.utils.aoa_to_sheet([headers,...rows]);
+  ws["!cols"]=[{wch:6},{wch:22},{wch:42},{wch:38},{wch:16},{wch:8},{wch:13},{wch:13},{wch:14},{wch:14},{wch:10}];
+  XLSX.utils.book_append_sheet(wb,ws,"Sample Dispatch FY2025-26");
+
+  const pCounts={},pKg={};
+  RAW.forEach(r=>{pCounts[r.s]=(pCounts[r.s]||0)+1;pKg[r.s]=(pKg[r.s]||0)+r.kg;});
+  const ws2=XLSX.utils.aoa_to_sheet([["Salesperson","No. of Dispatches","Total Qty (Kg) Approx."],...Object.entries(pCounts).sort((a,b)=>b[1]-a[1]).map(([k,v])=>[k,v,Math.round(pKg[k])])]);
+  ws2["!cols"]=[{wch:24},{wch:18},{wch:22}];
+  XLSX.utils.book_append_sheet(wb,ws2,"Summary by Salesperson");
+
+  const gMap={};RAW.forEach(r=>r.g.split("/").forEach(g=>{const k=g.trim();gMap[k]=(gMap[k]||0)+1;}));
+  const ws3=XLSX.utils.aoa_to_sheet([["Grade","No. of Dispatches"],...Object.entries(gMap).sort((a,b)=>b[1]-a[1]).map(([k,v])=>[k,v])]);
+  ws3["!cols"]=[{wch:22},{wch:18}];
+  XLSX.utils.book_append_sheet(wb,ws3,"Summary by Grade");
+
+  XLSX.writeFile(wb,"Carbon_Black_Sample_Dispatch_FY2025-26.xlsx");
+}
+
+}
+</script>
+</body>
+</html>

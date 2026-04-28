@@ -1,0 +1,1107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Customer Complaints Dashboard — Himadri</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0d1117;
+  --surface: #161b22;
+  --surface2: #1c2128;
+  --border: #30363d;
+  --text: #e6edf3;
+  --text-muted: #8b949e;
+  --accent: #f0883e;
+  --accent2: #58a6ff;
+  --accent3: #3fb950;
+  --accent4: #ff7b72;
+  --accent5: #d2a8ff;
+  --fy1: #58a6ff;
+  --fy2: #f0883e;
+  --gold: #e3b341;
+  --red: #ff7b72;
+  --green: #3fb950;
+  --grid: rgba(48,54,61,0.5);
+  --chart-border: #161b22;
+  --shadow: 0 16px 36px rgba(0,0,0,0.22);
+}
+
+html[data-theme="ocean"] {
+  --bg: #07111f;
+  --surface: #0d1b2a;
+  --surface2: #10253b;
+  --border: #274060;
+  --text: #e8f1ff;
+  --text-muted: #9bb2cf;
+  --accent: #4cc9f0;
+  --accent2: #8ecae6;
+  --accent3: #52d273;
+  --accent4: #ff8fab;
+  --accent5: #c77dff;
+  --fy1: #4cc9f0;
+  --fy2: #ff9f1c;
+  --gold: #ffd166;
+  --red: #ff8fab;
+  --green: #52d273;
+  --grid: rgba(255,255,255,0.12);
+  --chart-border: #0d1b2a;
+}
+
+html[data-theme="light"] {
+  --bg: #f6f8fa;
+  --surface: #ffffff;
+  --surface2: #eef2f6;
+  --border: #d0d7de;
+  --text: #24292f;
+  --text-muted: #57606a;
+  --accent: #0969da;
+  --accent2: #1f883d;
+  --accent3: #1a7f37;
+  --accent4: #cf222e;
+  --accent5: #8250df;
+  --fy1: #0969da;
+  --fy2: #e36209;
+  --gold: #9a6700;
+  --red: #cf222e;
+  --green: #1a7f37;
+  --grid: rgba(0,0,0,0.12);
+  --chart-border: #ffffff;
+}
+
+html[data-theme="forest"] {
+  --bg: #07140f;
+  --surface: #0f1f18;
+  --surface2: #13271f;
+  --border: #254536;
+  --text: #e6fff2;
+  --text-muted: #9bc3ae;
+  --accent: #46c37b;
+  --accent2: #7ccf9c;
+  --accent3: #34d399;
+  --accent4: #ff8a8a;
+  --accent5: #c4b5fd;
+  --fy1: #46c37b;
+  --fy2: #d97706;
+  --gold: #eab308;
+  --red: #ff8a8a;
+  --green: #34d399;
+  --grid: rgba(255,255,255,0.12);
+  --chart-border: #0f1f18;
+}
+
+html[data-theme="sunset"] {
+  --bg: #1a0f14;
+  --surface: #25151d;
+  --surface2: #341b25;
+  --border: #5f3142;
+  --text: #fff0f5;
+  --text-muted: #cfacb9;
+  --accent: #ff8c42;
+  --accent2: #ffb36b;
+  --accent3: #ff6b6b;
+  --accent4: #ffd166;
+  --accent5: #e598f7;
+  --fy1: #ff8c42;
+  --fy2: #ff6b6b;
+  --gold: #ffd166;
+  --red: #ff6b6b;
+  --green: #7ce38b;
+  --grid: rgba(255,255,255,0.12);
+  --chart-border: #25151d;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--text); font-family: 'IBM Plex Sans', sans-serif; font-size: 14px; min-height: 100vh; }
+
+/* HEADER */
+.header { background: var(--surface); border-bottom: 1px solid var(--border); padding: 18px 32px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; }
+.header-left h1 { font-size: 18px; font-weight: 700; letter-spacing: -0.3px; }
+.header-left h1 span { color: var(--accent); }
+.header-left p { color: var(--text-muted); font-size: 12px; margin-top: 2px; font-family: 'IBM Plex Mono', monospace; }
+.theme-switcher { display: flex; align-items: center; gap: 8px; margin-left: 14px; }
+.theme-switcher label { font-size: 11px; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap; }
+.theme-switcher select {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 6px 10px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-family: inherit;
+  cursor: pointer;
+  min-width: 130px;
+}
+.theme-switcher select:focus { outline: none; border-color: var(--accent2); }
+.fy-badges { display: flex; gap: 8px; }
+.badge { padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 600; font-family: 'IBM Plex Mono', monospace; }
+.badge-fy1 { background: rgba(88,166,255,0.15); color: var(--fy1); border: 1px solid rgba(88,166,255,0.3); }
+.badge-fy2 { background: rgba(240,136,62,0.15); color: var(--fy2); border: 1px solid rgba(240,136,62,0.3); }
+
+/* FILTERS */
+.filters-bar { background: var(--surface2); border-bottom: 1px solid var(--border); padding: 12px 32px; display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.filter-group { display: flex; align-items: center; gap: 6px; }
+.filter-group label { font-size: 11px; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap; }
+.filter-group select { background: var(--surface); border: 1px solid var(--border); color: var(--text); padding: 5px 10px; border-radius: 6px; font-size: 12px; font-family: inherit; cursor: pointer; min-width: 130px; }
+.filter-group select:focus { outline: none; border-color: var(--accent2); }
+.filter-reset { margin-left: auto; background: rgba(255,123,114,0.1); border: 1px solid rgba(255,123,114,0.3); color: var(--red); padding: 5px 14px; border-radius: 6px; font-size: 12px; cursor: pointer; font-family: inherit; font-weight: 600; transition: all 0.2s; }
+.filter-reset:hover { background: rgba(255,123,114,0.2); }
+
+/* MAIN */
+.main { padding: 24px 32px; display: flex; flex-direction: column; gap: 20px; }
+
+/* KPI STRIP */
+.kpi-strip { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; }
+.kpi-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 16px 18px; position: relative; overflow: hidden; }
+.kpi-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; }
+.kpi-card.k1::before { background: var(--fy1); }
+.kpi-card.k2::before { background: var(--fy2); }
+.kpi-card.k3::before { background: var(--accent3); }
+.kpi-card.k4::before { background: var(--gold); }
+.kpi-card.k5::before { background: var(--red); }
+.kpi-label { font-size: 11px; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+.kpi-val { font-size: 28px; font-weight: 700; margin: 6px 0 4px; font-family: 'IBM Plex Mono', monospace; }
+.kpi-sub { font-size: 11px; color: var(--text-muted); }
+.kpi-change { font-size: 12px; font-weight: 600; margin-top: 4px; }
+.up { color: var(--red); }
+.down { color: var(--green); }
+.neutral { color: var(--text-muted); }
+
+/* SECTION TITLE */
+.section-title { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+.section-title::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+/* CHARTS GRID */
+.charts-row { display: grid; gap: 16px; }
+.charts-row.cols-3 { grid-template-columns: 1fr 1fr 1fr; }
+.charts-row.cols-2 { grid-template-columns: 3fr 2fr; }
+.charts-row.cols-2b { grid-template-columns: 2fr 3fr; }
+.chart-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 18px; }
+.chart-title { font-size: 13px; font-weight: 600; margin-bottom: 14px; color: var(--text); }
+.chart-title small { color: var(--text-muted); font-weight: 400; font-size: 11px; }
+.chart-wrap { position: relative; width: 100%; }
+.chart-wrap canvas { width: 100% !important; }
+
+/* TABLE */
+.table-wrap { overflow: auto; max-height: 400px; }
+table { width: max-content; min-width: 100%; border-collapse: collapse; font-size: 12px; }
+thead tr { background: var(--surface2); position: sticky; top: 0; z-index: 10; }
+th { padding: 8px 12px; text-align: left; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted); border-bottom: 1px solid var(--border); white-space: nowrap; }
+td { padding: 7px 12px; border-bottom: 1px solid rgba(48,54,61,0.5); color: var(--text); vertical-align: top; white-space: nowrap; }
+td.wrap-cell { white-space: normal; min-width: 220px; max-width: 340px; line-height: 1.5; word-break: break-word; }
+tr:hover td { background: rgba(255,255,255,0.02); }
+.repeat-badge { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 10px; font-weight: 600; font-family: 'IBM Plex Mono', monospace; }
+.r-high { background: rgba(255,123,114,0.2); color: var(--red); }
+.r-med { background: rgba(240,136,62,0.2); color: var(--accent); }
+.r-low { background: rgba(63,185,80,0.2); color: var(--green); }
+.fy-tag { font-size: 10px; padding: 2px 6px; border-radius: 4px; font-family: 'IBM Plex Mono', monospace; font-weight: 600; }
+.fy1-tag { background: rgba(88,166,255,0.15); color: var(--fy1); }
+.fy2-tag { background: rgba(240,136,62,0.15); color: var(--fy2); }
+
+/* REPEAT ANALYSIS */
+.repeat-section { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.repeat-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 18px; }
+.repeat-item { display: flex; align-items: center; justify-content: space-between; padding: 7px 0; border-bottom: 1px solid rgba(48,54,61,0.5); }
+.repeat-item:last-child { border-bottom: none; }
+.repeat-name { font-size: 12px; font-weight: 500; }
+.repeat-meta { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+.repeat-count { text-align: right; }
+.repeat-num { font-size: 18px; font-weight: 700; font-family: 'IBM Plex Mono', monospace; color: var(--accent); }
+.repeat-fy { font-size: 10px; color: var(--text-muted); }
+
+/* TREND BADGE */
+.trend-up { color: var(--red); }
+.trend-down { color: var(--green); }
+.arrow-up::before { content: '▲ '; }
+.arrow-down::before { content: '▼ '; }
+
+/* INSIGHT BOX */
+.insight-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+.insight-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 16px; border-left: 3px solid; }
+.insight-card.warn { border-color: var(--red); }
+.insight-card.ok { border-color: var(--green); }
+.insight-card.info { border-color: var(--accent2); }
+.insight-icon { font-size: 20px; margin-bottom: 6px; }
+.insight-title { font-size: 12px; font-weight: 700; margin-bottom: 4px; }
+.insight-body { font-size: 11px; color: var(--text-muted); line-height: 1.6; }
+
+/* SCROLLBAR */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+/* PASSWORD OVERLAY */
+#pwd-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: #0d1117; z-index: 9999; display: flex; align-items: center; justify-content: center; flex-direction: column; }
+.pwd-box { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 40px 48px; text-align: center; max-width: 380px; width: 90%; }
+.pwd-logo { font-size: 26px; font-weight: 800; margin-bottom: 4px; }
+.pwd-logo span { color: var(--accent); }
+.pwd-sub { color: var(--text-muted); font-size: 12px; margin-bottom: 28px; }
+.pwd-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted); margin-bottom: 8px; text-align: left; }
+.pwd-input { width: 100%; background: var(--bg); border: 1px solid var(--border); color: var(--text); padding: 10px 14px; border-radius: 8px; font-size: 15px; font-family: 'IBM Plex Mono', monospace; letter-spacing: 2px; outline: none; }
+.pwd-input:focus { border-color: var(--accent2); }
+.pwd-btn { margin-top: 16px; width: 100%; background: var(--accent); border: none; color: #fff; padding: 11px; border-radius: 8px; font-size: 14px; font-weight: 700; cursor: pointer; font-family: inherit; transition: opacity 0.2s; }
+.pwd-btn:hover { opacity: 0.85; }
+.pwd-err { color: var(--red); font-size: 12px; margin-top: 10px; min-height: 18px; }
+.dl-btn { display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; border-radius: 7px; font-size: 12px; font-weight: 600; cursor: pointer; border: 1px solid; font-family: inherit; transition: all 0.2s; background: none; }
+.dl-btn.excel { background: rgba(63,185,80,0.12); border-color: rgba(63,185,80,0.35); color: var(--green); }
+.dl-btn.excel:hover { background: rgba(63,185,80,0.22); }
+.dl-btn.chart-dl { background: rgba(88,166,255,0.08); border-color: rgba(88,166,255,0.25); color: var(--accent2); font-size: 11px; padding: 3px 9px; }
+.dl-btn.chart-dl:hover { background: rgba(88,166,255,0.18); }
+.chart-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 14px; gap: 8px; }
+.chart-header .chart-title { margin-bottom: 0; flex: 1; }
+</style>
+</head>
+<body>
+
+<script>
+// ── PASSWORD SYSTEM ──────────────────────────────────
+window.addEventListener('DOMContentLoaded', function() {
+  var overlay = document.getElementById('pwd-overlay');
+  var input   = document.getElementById('pwd-input');
+  var btn     = document.getElementById('pwd-btn');
+  var errEl   = document.getElementById('pwd-err');
+  var themeSelect = document.getElementById('theme-select');
+  var PWD     = 'CC@2426';
+
+  function applyTheme(theme) {
+    document.documentElement.setAttribute('data-theme', theme);
+    try { localStorage.setItem('hscl_theme', theme); } catch (e) {}
+    if (themeSelect && themeSelect.value !== theme) themeSelect.value = theme;
+  }
+
+  var savedTheme = 'dark';
+  try { savedTheme = localStorage.getItem('hscl_theme') || 'dark'; } catch (e) {}
+  applyTheme(savedTheme);
+  if (themeSelect) {
+    themeSelect.addEventListener('change', function() {
+      applyTheme(themeSelect.value);
+      if (typeof render === 'function') render();
+    });
+  }
+
+  function attempt() {
+    if (input.value === PWD) {
+      overlay.style.display = 'none';
+      input.value = '';
+    } else {
+      errEl.textContent = 'Incorrect password. Please try again.';
+      errEl.style.color = '#ff7b72';
+      input.value = '';
+      input.focus();
+      setTimeout(function(){ errEl.textContent = ''; }, 3000);
+    }
+  }
+
+  btn.addEventListener('click', attempt);
+  input.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') attempt();
+  });
+});
+</script>
+
+<!-- PASSWORD OVERLAY -->
+
+    <div class="pwd-sub">Himadri Speciality Chemical Limited</div>
+    <div class="pwd-label">Enter Dashboard Password</div>
+    <input class="pwd-input" type="password" id="pwd-input" placeholder="••••••••">
+    <button class="pwd-btn" id="pwd-btn">Unlock Dashboard →</button>
+    <div class="pwd-err" id="pwd-err"></div>
+  </div>
+</div>
+
+<div class="header">
+  <div class="header-left">
+    <h1>Customer Complaints <span>Analytics</span></h1>
+    <p style="color:var(--text-muted);font-size:12px;margin-top:2px">Himadri Speciality Chemical Limited (HSCL) &nbsp;·&nbsp; FY Year-on-Year Comparison</p>
+  </div>
+  <div class="fy-badges">
+    <div class="badge badge-fy1">● FY 2024-25</div>
+    <div class="badge badge-fy2">● FY 2025-26</div>
+  </div>
+  <div class="theme-switcher">
+    <label for="theme-select">Theme</label>
+    <select id="theme-select">
+      <option value="dark">Dark</option>
+      <option value="ocean">Ocean</option>
+      <option value="light">Light</option>
+      <option value="forest">Forest</option>
+      <option value="sunset">Sunset</option>
+    </select>
+  </div>
+</div>
+
+<div class="filters-bar">
+  <div class="filter-group">
+    <label>FY</label>
+    <select id="f-fy"><option value="ALL">All Years</option><option value="FY2024-25">FY 2024-25</option><option value="FY2025-26">FY 2025-26</option></select>
+  </div>
+  <div class="filter-group">
+    <label>Month</label>
+    <select id="f-month"><option value="ALL">All Months</option></select>
+  </div>
+  <div class="filter-group">
+    <label>Region</label>
+    <select id="f-region"><option value="ALL">All Regions</option></select>
+  </div>
+  <div class="filter-group">
+    <label>Sector</label>
+    <select id="f-sector"><option value="ALL">All Sectors</option></select>
+  </div>
+  <div class="filter-group">
+    <label>Grade</label>
+    <select id="f-grade"><option value="ALL">All Grades</option></select>
+  </div>
+  <div class="filter-group">
+    <label>Type</label>
+    <select id="f-type"><option value="ALL">All Types</option></select>
+  </div>
+  <div class="filter-group">
+    <label>Customer</label>
+    <select id="f-customer"><option value="ALL">All Customers</option></select>
+  </div>
+  <div class="filter-group">
+    <label>Nature</label>
+    <select id="f-nature"><option value="ALL">All Natures</option></select>
+  </div>
+  <button class="filter-reset" onclick="resetFilters()">✕ Reset</button>
+</div>
+
+<div class="main">
+  <!-- KPI Strip -->
+  <div class="kpi-strip">
+    <div class="kpi-card k1">
+      <div class="kpi-label">FY 2024-25</div>
+      <div class="kpi-val" id="kpi-fy1">141</div>
+      <div class="kpi-sub">Total Complaints</div>
+    </div>
+    <div class="kpi-card k2">
+      <div class="kpi-label">FY 2025-26</div>
+      <div class="kpi-val" id="kpi-fy2">76</div>
+      <div class="kpi-sub">Total Complaints</div>
+    </div>
+    <div class="kpi-card k3">
+      <div class="kpi-label">YoY Change</div>
+      <div class="kpi-val" id="kpi-change">-</div>
+      <div class="kpi-sub" id="kpi-change-sub">vs last year</div>
+    </div>
+    <div class="kpi-card k4">
+      <div class="kpi-label">Top Issue Type</div>
+      <div class="kpi-val" style="font-size:16px" id="kpi-top-type">-</div>
+      <div class="kpi-sub" id="kpi-top-type-sub">-</div>
+    </div>
+    <div class="kpi-card k5">
+      <div class="kpi-label">Repeat Customer</div>
+      <div class="kpi-val" style="font-size:16px" id="kpi-repeat">-</div>
+      <div class="kpi-sub" id="kpi-repeat-sub">most complaints</div>
+    </div>
+  </div>
+
+  <!-- Row 1: Monthly Trend + Type Split -->
+  <div>
+    <div class="section-title">Monthly Trend & Complaint Type</div>
+    <div class="charts-row cols-2">
+      <div class="chart-card">
+        <div class="chart-header"><div class="chart-title">Monthly Complaint Volume — FY Comparison <small>(Apr → Mar)</small></div><button class="dl-btn chart-dl" onclick="downloadChart('chartMonthly','Monthly_Trend','Monthly Complaint Volume — FY Comparison')">⬇ PNG</button></div>
+        <div class="chart-wrap" style="height:260px"><canvas id="chartMonthly"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-header"><div class="chart-title">Complaint Type Split <small>by FY</small></div><button class="dl-btn chart-dl" onclick="downloadChart('chartTypeBar','Complaint_Type_Split','Complaint Type Split by FY')">⬇ PNG</button></div>
+        <div class="chart-wrap" style="height:260px"><canvas id="chartTypeBar"></canvas></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Row 2: Region + Grade + Sector -->
+  <div>
+    <div class="section-title">Region · Grade · Sector Analysis</div>
+    <div class="charts-row cols-3">
+      <div class="chart-card">
+        <div class="chart-header"><div class="chart-title">Complaints by Region</div><button class="dl-btn chart-dl" onclick="downloadChart('chartRegion','Region_Analysis','Complaints by Region')">⬇ PNG</button></div>
+        <div class="chart-wrap" style="height:220px"><canvas id="chartRegion"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-header"><div class="chart-title">Top 10 Grades <small>by complaint count</small></div><button class="dl-btn chart-dl" onclick="downloadChart('chartGrade','Grade_Analysis','Top 10 Grades by Complaint Count')">⬇ PNG</button></div>
+        <div class="chart-wrap" style="height:220px"><canvas id="chartGrade"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-header"><div class="chart-title">Sector Distribution</div><button class="dl-btn chart-dl" onclick="downloadChart('chartSector','Sector_Distribution','Sector Distribution')">⬇ PNG</button></div>
+        <div class="chart-wrap" style="height:220px"><canvas id="chartSector"></canvas></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Row 3: Nature + Sales Person -->
+  <div>
+    <div class="section-title">Nature of Complaint & Sales Person</div>
+    <div class="charts-row cols-2b">
+      <div class="chart-card">
+        <div class="chart-header"><div class="chart-title">Sales Person — Complaint Load <small>FY comparison</small></div><button class="dl-btn chart-dl" onclick="downloadChart('chartSP','Sales_Person_Load','Sales Person Complaint Load')">⬇ PNG</button></div>
+        <div class="chart-wrap" style="height:250px"><canvas id="chartSP"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-header"><div class="chart-title">Top 12 Complaint Natures <small>both FY combined</small></div><button class="dl-btn chart-dl" onclick="downloadChart('chartNature','Nature_Analysis','Top 12 Complaint Natures')">⬇ PNG</button></div>
+        <div class="chart-wrap" style="height:250px"><canvas id="chartNature"></canvas></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Row 4: Nature YoY change -->
+  <div>
+    <div class="section-title">YoY Change by Nature — Increase / Decrease</div>
+    <div class="charts-row" style="grid-template-columns:1fr">
+      <div class="chart-card">
+        <div class="chart-header"><div class="chart-title">Nature-wise Change: FY2025-26 vs FY2024-25 <small>(+ve = increase, -ve = decrease)</small></div><button class="dl-btn chart-dl" onclick="downloadChart('chartNatureChange','Nature_YoY_Change','Nature-wise YoY Change')">⬇ PNG</button></div>
+        <div class="chart-wrap" style="height:280px"><canvas id="chartNatureChange"></canvas></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Insights -->
+  <div>
+    <div class="section-title">Key Insights</div>
+    <div class="insight-row" id="insights-row"></div>
+  </div>
+
+  <!-- Repeat Complaints Analysis -->
+  <div>
+    <div class="section-title">Repeat Complaints — Same Customer &amp; Same Grade</div>
+    <div class="repeat-section">
+      <div class="repeat-card">
+        <div class="chart-title">🔁 Top Repeat Customers <small>(complaints across both FY)</small></div>
+        <div id="repeat-customers"></div>
+      </div>
+      <div class="repeat-card">
+        <div class="chart-title">📦 Top Repeat Grade-Customer Pairs <small>(same grade, same customer)</small></div>
+        <div id="repeat-pairs"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Detail Table -->
+  <div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+      <div class="section-title" style="margin-bottom:0;flex:1">Complaint Log <span id="table-count-label" style="color:var(--text-muted);font-size:11px;font-weight:400;text-transform:none;letter-spacing:0"></span></div>
+      <button class="dl-btn excel" onclick="downloadExcel()">⬇ Download Excel</button>
+      <button class="dl-btn" style="background:rgba(240,136,62,0.12);border-color:rgba(240,136,62,0.35);color:var(--accent)" onclick="downloadPPT()">⬇ Download PPT</button>
+    </div>
+    <div class="chart-card" style="padding:0">
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>#</th><th>FY</th><th>Month</th><th>Customer</th><th>Grade</th>
+              <th>Sector</th><th>Type</th><th>Nature</th><th>Region</th><th>Sales Person</th><th>Description</th>
+            </tr>
+          </thead>
+          <tbody id="detail-table"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const RAW = [{"Sr_No": 1, "FY": "FY2024-25", "Month": "APR'24", "Month_Short": "APR", "Month_Order": 1, "Sector": "DOMESTIC RUBBER", "Region": "WEST", "Sales_Person": "ANSHUMAN PARASHAR", "Grade": "N330", "Grade_Clean": "N330", "Customer_Name": "CEAT BHANDUP", "Customer_Type": "DIRECT TYRE", "Complaint_Type": "PACKAGING", "Nature": "DAMAGE & SHORT RECEIPT", "Description": "Received 01 jumbo carbon bag in damaged condition"}, {"Sr_No": 2, "FY": "FY2024-25", "Month": "APR'24", "Month_Short": "APR", "Month_Order": 1, "Sector": "DOMESTIC NON-RUBBER", "Region": "NORTH", "Sales_Person": "KOYEL GUPTA", "Grade": "KP103", "Grade_Clean": "KP103", "Customer_Name": "BHARAT SOLVENT", "Customer_Type": "AGENT", "Complaint_Type": "PACKAGING", "Nature": "DAMAGE & SHORT RECEIPT", "Description": "8.5 KG SHORTAGE"}, {"Sr_No": 3, "FY": "FY2024-25", "Month": "APR'24", "Month_Short": "APR", "Month_Order": 1, "Sector": "DOMESTIC NON-RUBBER", "Region": "NORTH", "Sales_Person": "KOYEL GUPTA", "Grade": "KP202", "Grade_Clean": "KP202", "Customer_Name": "PETROTECH CHEMICA", "Customer_Type": "AGENT", "Complaint_Type": "PACKAGING", "Nature": "DAMAGE & SHORT RECEIPT", "Description": "3 BAG DAMAGED , 75 KG SHORTAGE"}, {"Sr_No": 4, "FY": "FY2024-25", "Month": "APR'24", "Month_Short": "APR", "Month_Order": 1, "Sector": "DOMESTIC RUBBER", "Region": "SOUTH", "Sales_Person": "N V PANDIARAJAN", "Grade": "N550", "Grade_Clean": "N550", "Customer_Name": "POLYHOSE INDIA", "Customer_Type": "DIRECT NON-TYRE", "Complaint_Type": "PACKAGING", "Nature": "FOREIGN PARTICLE / FM", "Description": "Customer observed foreign particle from silo magnetic grids in Carbon N550"}, {"Sr_No": 5, "FY": "FY2024-25", "Month": "APR'24", "Month_Short": "APR", "Month_Order": 1, "Sector": "DOMESTIC RUBBER", "Region": "NORTH", "Sales_Person": "ANSHUMAN PARASHAR", "Grade": "RG223", "Grade_Clean": "RG223", "Customer_Name": "ALP NISHIKAWA", "Customer_Type": "DIRECT NON-TYRE", "Complaint_Type": "PACKAGING", "Nature": "PRINTING / MARKING ISSUE", "Description": "Material supplied in March but manufacturing date printed in bag is 11/06/2024"}, {"Sr_No": 6, "FY": "FY2024-25", "Month": "APR'24", "Month_Short": "APR", "Month_Order": 1, "Sector": "DOMESTIC NON-RUBBER", "Region": "WEST", "Sales_Person": "KOYEL GUPTA", "Grade": "N660\nN220", "Grade_Clean": "N220, N660", "Customer_Name": "PETROTECH CHEMICA", "Customer_Type": "AGENT", "Complaint_Type": "PACKAGING", "Nature": "DAMAGE & SHORT RECEIPT", "Description": "N660 - 1 BAG DAMAGED, 25 KG SHORTAGE; N220 - 3 BAG DAMAGED, 75 KG SHORTAGE"}, {"Sr_No": 7, "FY": "FY2024-25", "Month": "APR'24", "Month_Short": "APR", "Month_Order": 1, "Sector": "DOMESTIC RUBBER", "Region": "NORTH", "Sales_Person": "ANSHUMAN PARASHAR", "Grade": "N660", "Grade_Clean": "N660", "Customer_Name": "GATES INDIA", "Customer_Type": "AGENT", "Complaint_Type": "TECHNICAL", "Nature": "VISCOSITY / RHEOLOGY", "Description": "Customer complained regarding rheological properties being out of specification"}, {"Sr_No": 8, "FY": "FY2024-25", "Month": "APR'24", "Month_Short": "APR", "Month_Order": 1, "Sector": "DOMESTIC NON-RUBBER", "Region": "NORTH", "Sales_Person": "KOYEL GUPTA", "Grade": "N660\nN330", "Grade_Clean": "N330, N660", "Customer_Name": "PETROTECH CHEMICA", "Customer_Type": "AGENT", "Complaint_Type": "PACKAGING", "Nature": "DAMAGE & SHORT RECEIPT", "Description": "N660 - 1 BAG DAMAGED; N330 - 1 BAG DAMAGED"}, {"Sr_No": 9, "FY": "FY2024-25", "Month": "APR'24", "Month_Short": "APR", "Month_Order": 1, "Sector": "DOMESTIC NON-RUBBER", "Region": "NORTH", "Sales_Person": "KOYEL GUPTA", "Grade": "JETEX105", "Grade_Clean": "JETEX105", "Customer_Name": "JAI CAP", "Customer_Type": "AGENT", "Complaint_Type": "PACKAGING", "Nature": "DAMAGE & SHORT RECEIPT", "Description": "2 BAG DAMAGED , 50 KG SHORTAGE"}, {"Sr_No": 10, "FY": "FY2024-25", "Month": "APR'24", "Month_Short": "APR", "Month_Order": 1, "Sector": "EXPORT", "Region": "EXPORT", "Sales_Person": "RAVI SHARMA", "Grade": "N330", "Grade_Clean": "N330", "Customer_Name": "RCHEMIE INTERNATIONAL FZC", "Customer_Type": null, "Complaint_Type": "PACKAGING", "Nature": "DAMAGE & SHORT RECEIPT", "Description": "Customer found few Paper Bags damaged"}, {"Sr_No": 11, "FY": "FY2024-25", "Month": "APR'24", "Month_Short": "APR", "Month_Order": 1, "Sector": "DOMESTIC RUBBER", "Region": "WEST", "Sales_Person": "ANSHUMAN PARASHAR", "Grade": "N774", "Grade_Clean": "N774", "Customer_Name": "ROHIT RUBBER", "Customer_Type": "AGENT", "Complaint_Type": "PACKAGING", "Nature": "DAMAGE & SHORT RECEIPT", "Description": "Found 5 bags were damaged"}, {"Sr_No": 12, "FY": "FY2024-25", "Month": "APR'24", "Month_Short": "APR", "Month_Order": 1, "Sector": "DOMESTIC RUBBER", "Region": "NORTH", "Sales_Person": "ANSHUMAN PARASHAR", "Grade": "RG223", "Grade_Clean": "RG223", "Customer_Name": "NARESH RUBBER THROUGH ARKIN RUBBER", "Customer_Type": "DIRECT NON-TYRE", "Complaint_Type": "TECHNICAL", "Nature": "DISPERSION / SURFACE ISSUE", "Description": "Customer is facing severe dispersion issue"}, {"Sr_No": 13, "FY": "FY2024-25", "Month": "APR'24", "Month_Short": "APR", "Month_Order": 1, "Sector": "DOMESTIC RUBBER", "Region": "NORTH", "Sales_Person": "ANSHUMAN PARASHAR", "Grade": "N550", "Grade_Clean": "N550", "Customer_Name": "VIBRACOUSTIC", "Customer_Type": "DIRECT NON-TYRE", "Complaint_Type": "PACKAGING", "Nature": "FOREIGN PARTICLE / FM", "Description": "Thread coming out from Jumbo Bag of N550"}, {"Sr_No": 14, "FY": "FY2024-25", "Month": "APR'24", "Month_Short": "APR", "Month_Order": 1, "Sector": "DOMESTIC NON-RUBBER", "Region": "SOUTH", "Sales_Person": "KOYEL GUPTA", "Grade": "KC101", "Grade_Clean": "KC101", "Customer_Name": "BLEND COLOURS", "Customer_Type": "DIRECT NON-TYRE", "Complaint_Type": "TECHNICAL", "Nature": "DISPERSION / SURFACE ISSUE", "Description": "DISPERSION ISSUE"}, {"Sr_No": 15, "FY": "FY2024-25", "Month": "MAY'24", "Month_Short": "MAY", "Month_Order": 2, "Sector": "DOMESTIC RUBBER", "Region": "SOUTH", "Sales_Person": "N V PANDIARAJAN", "Grade": "N660\nN326", "Grade_Clean": "N326, N660", "Customer_Name": "RIDDHI MADURAI", "Customer_Type": "AGENT", "Complaint_Type": "PACKAGING", "Nature": "DAMAGE & SHORT RECEIPT", "Description": "N660 - 5 Bags Damage; N326 - 2 Bags Damage"}, {"Sr_No": 16, "FY": "FY2024-25", "Month": "MAY'24", "Month_Short": "MAY", "Month_Order": 2, "Sector": "DOMESTIC RUBBER", "Region": "SOUTH", "Sales_Person": "N V PANDIARAJAN", "Grade": "N550\nRG223", "Grade_Clean": "N550, RG223", "Customer_Name": "RIDDHI MADURAI", "Customer_Type": "AGENT", "Complaint_Type": "PACKAGING", "Nature": "DAMAGE & SHORT RECEIPT", "Description": "N550 & RG223 bags damage"}, {"Sr_No": 17, "FY": "FY2024-25", "Month": "MAY'24", "Month_Short": "MAY", "Month_Order": 2, "Sector": "DOMESTIC NON-RUBBER", "Region": "WEST", "Sales_Person": "KOYEL GUPTA", "Grade": "N550", "Grade_Clean": "N550", "Customer_Name": "PETROTECH CHEMICA", "Customer_Type": "AGENT", "Complaint_Type": "PACKAGING", "Nature": "DAMAGE & SHORT RECEIPT", "Description": "2 BAG DAMAGED , 50 KG SHORTAGE"}, {"Sr_No": 18, "FY": "FY2024-25", "Month": "MAY'24", "Month_Short": "MAY", "Month_Order": 2, "Sector": "DOMESTIC NON-RUBBER", "Region": "WEST", "Sales_Person": "KOYEL GUPTA", "Grade": "N330", "Grade_Clean": "N330", "Customer_Name": "J J PLASTALLOY", "Customer_Type": "DIRECT NON-TYRE", "Complaint_Type": "PACKAGING", "Nature": "FOREIGN PARTICLE / FM", "Description": "METAL PARTICLE FOUND"}, {"Sr_No": 19, "FY": "FY2024-25", "Month": "MAY'24", "Month_Short": "MAY", "Month_Order": 2, "Sector": "DOMESTIC NON-RUBBER", "Region": "WEST", "Sales_Person": "KOYEL GUPTA", "Grade": "JETEX105", "Grade_Clean": "JETEX105", "Customer_Name": "PETROTECH CHEMICA", "Customer_Type": "AGENT", "Complaint_Type": "PACKAGING", "Nature": "DAMAGE & SHORT RECEIPT", "Description": "1 BAG DAMAGED"}, {"Sr_No": 20, "FY": "FY2024-25", "Month": "MAY'24", "Month_Short": "MAY", "Month_Order": 2, "Sector": "DOMESTIC RUBBER", "Region": "WEST", "Sales_Person": "ANSHUMAN PARASHAR", "Grade": "N220", "Grade_Clean": "N220", "Customer_Name": "CEAT BHANDUP", "Customer_Type": "DIRECT TYRE", "Complaint_Type": "PACKAGING", "Nature": "DAMAGE & SHORT RECEIPT", "Description": "Received N220 jumbo bag in damage condition. 55 KGS SHORT"}, {"Sr_No": 21, "FY": "FY2024-25", "Month": "MAY'24", "Month_Short": "MAY", "Month_Order": 2, "Sector": "DOMESTIC RUBBER", "Region": "NORTH", "Sales_Person": "ANSHUMAN PARASHAR", "Grade": "N550", "Grade_Clean": "N550", "Customer_Name": "KM IMPEX", "Customer_Type": "AGENT", "Complaint_Type": "PACKAGING", "Nature": "DAMAGE & SHORT RECEIPT", "Description": "01 BAG (500KG JB) FOUND TORN"}, {"Sr_No": 22, "FY": "FY2024-25", "Month": "MAY'24", "Month_Short": "MAY", "Month_Order": 2, "Sector": "DOMESTIC RUBBER", "Region": "NORTH", "Sales_Person": "ANSHUMAN PARASHAR", "Grade": "N330\nN550", "Grade_Clean": "N330, N550", "Customer_Name": "SUPREME INDUSTRIES", "Customer_Type": "AGENT", "Complaint_Type": "LOGISTICS", "Nature": "DAMAGE & SHORT RECEIPT", "Description": "06 BAGS DAMAGED FOR EACH GRADES"}, {"Sr_No": 23, "FY": "FY2024-25", "Month": "MAY'24", "Month_Short": "MAY", "Month_Order": 2, "Sector": "DOMESTIC RUBBER", "Region": "NORTH", "Sales_Person": "ANSHUMAN PARASHAR", "Grade": "RG223", "Grade_Clean": "RG223", "Customer_Name": "ALP NISHIKAWA", "Customer_Type": "DIRECT NON-TYRE", "Complaint_Type": "PACKAGING", "Nature": "DAMAGE & SHORT RECEIPT", "Description": "Bags not properly stacked, getting displaced during truck movement"}, {"Sr_No": 24, "FY": "FY2024-25", "Month": "MAY'24", "Month_Short": "MAY", "Month_Order": 2, "Sector": "DOMESTIC RUBBER", "Region": "SOUTH", "Sales_Person": "N V PANDIARAJAN", "Grade": "N550\nN660", "Grade_Clean": "N550, N660", "Customer_Name": "RIDDHI CHENNAI", "Customer_Type": "AGENT", "Complaint_Type": "PACKAGING", "Nature": "DAMAGE & SHORT RECEIPT", "Description": "N550 & N660 bags damage"}, {"Sr_No": 25, "FY": "FY2024-25", "Month": "MAY'24", "Month_Short": "MAY", "Month_Order": 2, "Sector": "DOMESTIC NON-RUBBER", "Region": "WEST", "Sales_Person": "KOYEL GUPTA", "Grade": "KC101", "Grade_Clean": "KC101", "Customer_Name": "PETROTECH CHEMICA", "Customer_Type": "AGENT", "Complaint_Type": "PACKAGING", "Nature": "DAMAGE & SHORT RECEIPT", "Description": "1 BAG DAMAGED"}, {"Sr_No": 26, "FY": "FY2024-25", "Month": "MAY'24", "Month_Short": "MAY", "Month_Order": 2, "Sector": "DOMESTIC RUBBER", "Region": "SOUTH", "Sales_Person": "N V PANDIARAJAN", "Grade": "N774", "Grade_Clean": "N774", "Customer_Name": "POLYHOSE INDIA", "Customer_Type": "AGENT", "Complaint_Type": "TECHNICAL", "Nature": "CHEMICAL PROPERTIES", "Description": "Very low scorch values in N774"}, {"Sr_No": 27, "FY": "FY2024-25", "Month": "MAY'24", "Month_Short": "MAY", "Month_Order": 2, "Sector": "DOMESTIC NON-RUBBER", "Region": "WEST", "Sales_Person": "KOYEL GUPTA", "Grade": "JETEX105", "Grade_Clean": "JETEX105", "Customer_Name": "PETROTECH CHEMICA", "Customer_Type": "AGENT", "Complaint_Type": "TECHNICAL", "Nature": "CHEMICAL PROPERTIES", "Description": "FPV between 3.5 to 6.00 Bar/gm"}, {"Sr_No": 28, "FY": "FY2024-25", "Month": "MAY'24", "Month_Short": "MAY", "Month_Order": 2, "Sector": "DOMESTIC RUBBER", "Region": "NORTH", "Sales_Person": "ANSHUMAN PARASHAR", "Grade": "OG", "Grade_Clean": "OG", "Customer_Name": "ANUSHKA ENTERPRISE", "Customer_Type": "DIRECT NON-TYRE", "Complaint_Type": "PACKAGING", "Nature": "FOREIGN PARTICLE / FM", "Description": "Customer found foreign particles 10-50MM in size"}, {"Sr_No": 29, "FY": "FY2024-25", "Month": "MAY'24", "Month_Short": "MAY", "Month_Order": 2, "Sector": "DOMESTIC RUBBER", "Region": "NORTH", "Sales_Person": "ANSHUMAN PARASHAR", "Grade": "OG", "Grade_Clean": "OG", "Customer_Name": "BHAVYA ENTERPRISES", "Customer_Type": "DIRECT NON-TYRE", "Complaint_Type": "PACKAGING", "Nature": "FOREIGN PARTICLE / FM", "Description": "Material contains large pieces of foreign substances"}, {"Sr_No": 30, "FY": "FY2024-25", "Month": "MAY'24", "Month_Short": "MAY", "Month_Order": 2, "Sector": "DOMESTIC NON-RUBBER", "Region": "WEST", "Sales_Person": "KOYEL GUPTA", "Grade": "N330", "Grade_Clean": "N330", "Customer_Name": "BHARAT SOLVENT", "Customer_Type": "AGENT", "Complaint_Type": "PACKAGING", "Nature": "DAMAGE & SHORT RECEIPT", "Description": "1 KG SHORTAGE"}, {"Sr_No": 31, "FY": "FY2024-25", "Month": "JUN'24", "Month_Short": "JUN", "Month_Order": 3, "Sector": "DOMESTIC RUBBER", "Region": "SOUTH", "Sales_Person": "N V PANDIARAJAN", "Grade": "N330\nN660", "Grade_Clean": "N330, N660", "Customer_Name": "RIDDHI CHENNAI", "Customer_Type": "AGENT", "Complaint_Type": "PACKAGING", "Nature": "DAMAGE & SHORT RECEIPT", "Description": "N330 & N660 bags damage"}, {"Sr_No": 32, "FY": "FY2024-25", "Month": "JUN'24", "Month_Short": "JUN", "Month_Order": 3, "Sector": "DOMESTIC RUBBER", "Region": "SOUTH", "Sales_Person": "N V PANDIARAJAN", "Grade": "RG223\nN550", "Grade_Clean": "N550, RG223", "Customer_Name": "RIDDHI CHENNAI", "Customer_Type": "AGENT", "Complaint_Type": "PACKAGING", "Nature": "DAMAGE & SHORT RECEIPT", "Description": "RG223 & N550 bags damage"}, {"Sr_No": 33, "FY": "FY2024-25", "Month": "JUN'24", "Month_Short": "JUN", "Month_Order": 3, "Sector": "DOMESTIC NON-RUBBER", "Region": "WEST", "Sales_Person": "KOYEL GUPTA", "Grade": "JETEX105", "Grade_Clean": "JETEX105", "Customer_Name": "HEUBACH COLORANTS INDIA LIMITED", "Customer_Type": "DIRECT NON-TYRE", "Complaint_Type": "TECHNICAL", "Nature": "CHEMICAL PROPERTIES", "Description": "Settling value 0.2% vs spec 0.05%"}, {"Sr_No": 34, "FY": "FY2024-25", "Month": "JUN'24", "Month_Short": "JUN", "Month_Order": 3, "Sector": "DOMESTIC NON-RUBBER", "Region": "NORTH", "Sales_Person": "KOYEL GUPTA", "Grade": "JETEX105", "Grade_Clean": "JETEX105", "Customer_Name": "BHARAT SOLVENT", "Customer_Type": "AGENT", "Complaint_Type": "PACKAGING", "Nature": "DAMAGE & SHORT RECEIPT", "Description": "4 KG SHORTAGE"}, {"Sr_No": 35, "FY": "FY2024-25", "Month": "JUN'24", "Month_Short": "JUN", "Month_Order": 3, "Sector": "DOMESTIC RUBBER", "Region": "SOUTH", "Sales_Person": "N V PANDIARAJAN", "Grade": "RG223\nN326\nN660", "Grade_Clean": "N326, N660, RG223", "Customer_Name": "RIDDHI CHENNAI", "Customer_Type": "AGENT", "Complaint_Type": "PACKAGING", "Nature": "DAMAGE & SHORT RECEIPT", "Description": "Multiple grade bag damage"}, {"Sr_No": 36, "FY": "FY2024-25", "Month": "JUN'24", "Month_Short": "JUN", "Month_Order": 3, "Sector": "DOMESTIC NON-RUBBER", "Region": "WEST", "Sales_Person": "KOYEL GUPTA", "Grade": "N330", "Grade_Clean": "N330", "Customer_Name": "PETROTECH CHEMICA", "Customer_Type": "AGENT", "Complaint_Type": "PACKAGING", "Nature": "DAMAGE & SHORT RECEIPT", "Description": "1 BAG DAMAGED"}, {"Sr_No": 37, "FY": "FY2024-25", "Month": "JUN'24", "Month_Short": "JUN", "Month_Order": 3, "Sector": "DOMESTIC RUBBER", "Region": "NORTH", "Sales_Person": "ANSHUMAN PARASHAR", "Grade": "N660\nN550", "Grade_Clean": "N550, N660", "Customer_Name": "GATES INDIA", "Customer_Type": "AGENT", "Complaint_Type": "TECHNICAL", "Nature": "MIXING / COMPOUND ISSUE", "Description": "High ML & MH, High Viscosity and Mixing issue"}, {"Sr_No": 38, "FY": "FY2024-25", "Month": "JUN'24", "Month_Short": "JUN", "Month_Order": 3, "Sector": "DOMESTIC RUBBER", "Region": "SOUTH", "Sales_Person": "N V PANDIARAJAN", "Grade": "N550", "Grade_Clean": "N550", "Customer_Name": "TULSIRAM HYDERABAD", "Customer_Type": "AGENT", "Complaint_Type": "PACKAGING", "Nature": "DAMAGE & SHORT RECEIPT", "Description": "1 BAG DAMAGED"}, {"Sr_No": 39, "FY": "FY2024-25", "Month": "JUN'24", "Month_Short": "JUN", "Month_Order": 3, "Sector": "DOMESTIC NON-RUBBER", "Region": "WEST", "Sales_Person": "KOYEL GUPTA", "Grade": "KP202", "Grade_Clean": "KP202", "Customer_Name": "PETROTECH CHEMICA", "Customer_Type": "AGENT", "Complaint_Type": "TECHNICAL", "Nature": "WET / MOISTURE & LUMPS", "Description": "Processing issues - FPV is high, lumps in material"}, {"Sr_No": 40, "FY": "FY2024-25", "Month": "JUN'24", "Month_Short": "JUN", "Month_Order": 3, "Sector": "DOMESTIC NON-RUBBER", "Region": "WEST", "Sales_Person": "KOYEL GUPTA", "Grade": "KC120\nKP202", "Grade_Clean": "KC120, KP202", "Customer_Name": "PETROTECH CHEMICA", "Customer_Type": "AGENT", "Complaint_Type": "PACKAGING", "Nature": "WET / MOISTURE & LUMPS", "Description": "KC120 wet, KP202 damaged"}, {"Sr_No": 41, "FY": "FY2024-25", "Month": "JUN'24", "Month_Short": "JUN", "Month_Order": 3, "Sector": "DOMESTIC NON-RUBBER", "Region": "WEST", "Sales_Person": "KOYEL GUPTA", "Grade": "KC101", "Grade_Clean": "KC101", "Customer_Name": "PETROTECH CHEMICA", "Customer_Type": "AGENT", "Complaint_Type": "PACKAGING", "Nature": "WET / MOISTURE & LUMPS", "Description": "1 BAG DAMAGED"}, {"Sr_No": 42, "FY": "FY2024-25", "Month": "JUL'24", "Month_Short": "JUL", "Month_Order": 4, "Sector": "DOMESTIC RUBBER", "Region": "WEST", "Sales_Person": "ANSHUMAN PARASHAR", "Grade": "N220", "Grade_Clean": "N220", "Customer_Name": "CEAT BHANDUP", "Customer_Type": "DIRECT TYRE", "Complaint_Type": "PACKAGING", "Nature": "DAMAGE & SHORT RECEIPT", "Description": "Received N220 jumbo bag in damage condition"}, {"Sr_No": 43, "FY": "FY2024-25", "Month": "JUL'24", "Month_Short": "JUL", "Month_Order": 4, "Sector": "DOMESTIC RUBBER", "Region": "WEST", "Sales_Person": "ANSHUMAN PARASHAR", "Grade": "N774", "Grade_Clean": "N774", "Customer_Name": "GRINDWELL", "Customer_Type": "AGENT", "Complaint_Type": "LOGISTICS", "Nature": "WET / MOISTURE & LUMPS", "Description": "Vehicle reported in wet condition"}, {"Sr_No": 44, "FY": "FY2024-25", "Month": "JUL'24", "Month_Short": "JUL", "Month_Order": 4, "Sector": "DOMESTIC NON-RUBBER", "Region": "WEST", "Sales_Person": "KOYEL GUPTA", "Grade": "JETEX105", "Grade_Clean": "JETEX105", "Customer_Name": "HEUBACH COLORANTS INDIA LIMITED", "Customer_Type": "DIRECT NON-TYRE", "Complaint_Type": "TECHNICAL", "Nature": "CHEMICAL PROPERTIES", "Description": "Settling value 0.2%"}, {"Sr_No": 45, "FY": "FY2024-25", "Month": "JUL'24", "Month_Short": "JUL", "Month_Order": 4, "Sector": "DOMESTIC RUBBER", "Region": "WEST", "Sales_Person": "ANSHUMAN PARASHAR", "Grade": "N220", "Grade_Clean": "N220", "Customer_Name": "CEAT BHANDUP", "Customer_Type": "DIRECT TYRE", "Complaint_Type": "PACKAGING", "Nature": "DAMAGE & SHORT RECEIPT", "Description": "N220 jumbo bag in damage condition"}, {"Sr_No": 46, "FY": "FY2024-25", "Month": "JUL'24", "Month_Short": "JUL", "Month_Order": 4, "Sector": "DOMESTIC RUBBER", "Region": "NORTH", "Sales_Person": "ANSHUMAN PARASHAR", "Grade": "N550", "Grade_Clean": "N550", "Customer_Name": "TOYODA GOSEI - SURYA", "Customer_Type": "AGENT", "Complaint_Type": "QUALITY", "Nature": "WET / MOISTURE & LUMPS", "Description": "Moisture >15%, carbon lumps in N550"}, {"Sr_No": 47, "FY": "FY2024-25", "Month": "JUL'24", "Month_Short": "JUL", "Month_Order": 4, "Sector": "DOMESTIC RUBBER", "Region": "WEST", "Sales_Person": "ANSHUMAN PARASHAR", "Grade": "N550", "Grade_Clean": "N550", "Customer_Name": "ROHIT RUBBER", "Customer_Type": "AGENT", "Complaint_Type": "PACKAGING", "Nature": "DAMAGE & SHORT RECEIPT", "Description": "07+05+04 BAGS DAMAGED, 400KG LOSS"}, {"Sr_No": 48, "FY": "FY2024-25", "Month": "JUL'24", "Month_Short": "JUL", "Month_Order": 4, "Sector": "DOMESTIC NON-RUBBER", "Region": "WEST", "Sales_Person": "KOYEL GUPTA", "Grade": "N330", "Grade_Clean": "N330", "Customer_Name": "PETROTECH CHEMICA", "Customer_Type": "AGENT", "Complaint_Type": "PACKAGING", "Nature": "DAMAGE & SHORT RECEIPT", "Description": "2 BAG DAMAGED"}, {"Sr_No": 49, "FY": "FY2024-25", "Month": "JUL'24", "Month_Short": "JUL", "Month_Order": 4, "Sector": "DOMESTIC RUBBER", "Region": "WEST", "Sales_Person": "ANSHUMAN PARASHAR", "Grade": "N375", "Grade_Clean": "N375", "Customer_Name": "SUDARSHAN AUTO", "Customer_Type": "AGENT", "Complaint_Type": "PACKAGING", "Nature": "DAMAGE & SHORT RECEIPT", "Description": "Customer raised concern about packaging of N375"}, {"Sr_No": 50, "FY": "FY2024-25", "Month": "JUL'24", "Month_Short": "JUL", "Month_Order": 4, "Sector": "DOMESTIC RUBBER", "Region": "WEST", "Sales_Person": "ANSHUMAN PARASHAR", "Grade": "N220", "Grade_Clean": "N220", "Customer_Name": "ORIENTAL RUBBER", "Customer_Type": "AGENT", "Complaint_Type": "PACKAGING", "Nature": "FOREIGN PARTICLE / FM", "Description": "Plastic mug found in jumbo bag"}, {"Sr_No": 51, "FY": "FY2024-25", "Month": "JUL'24", "Month_Short": "JUL", "Month_Order": 4, "Sector": "DOMESTIC RUBBER", "Region": "SOUTH", "Sales_Person": "N V PANDIARAJAN", "Grade": "N234", "Grade_Clean": "N234", "Customer_Name": "RIDDHI MADURAI", "Customer_Type": "AGENT", "Complaint_Type": "PACKAGING", "Nature": "MISSING BAG", "Description": "Invoice received but material not received"}, {"Sr_No": 52, "FY": "FY2024-25", "Month": "JUL'24", "Month_Short": "JUL", "Month_Order": 4, "Sector": "DOMESTIC RUBBER", "Region": "WEST", "Sales_Person": "ANSHUMAN PARASHAR", "Grade": "N774", "Grade_Clean": "N774", "Customer_Name": "ROHIT RUBBER", "Customer_Type": "AGENT", "Complaint_Type": "PACKAGING", "Nature": "DAMAGE & SHORT RECEIPT", "Description": "4 bags damaged"}, {"Sr_No": 53, "FY": "FY2024-25", "Month": "JUL'24", "Month_Short": "JUL", "Month_Order": 4, "Sector": "DOMESTIC RUBBER", "Region": "NORTH", "Sales_Person": "ANSHUMAN PARASHAR", "Grade": "N550", "Grade_Clean": "N550", "Customer_Name": "TOYODA GOSEI - SURYA", "Customer_Type": "AGENT", "Complaint_Type": "QUALITY", "Nature": "MIXING / COMPOUND ISSUE", "Description": "Sticking issue on two roll mills - repeated consecutive month"}, {"Sr_No": 54, "FY": "FY2024-25", "Month": "AUG'24", "Month_Short": "AUG", "Month_Order": 5, "Sector": "DOMESTIC NON-RUBBER", "Region": "WEST", "Sales_Person": "KOYEL GUPTA", "Grade": "KC101\nN550", "Grade_Clean": "KC101, N550", "Customer_Name": "PETROTECH CHEMICA", "Customer_Type": "AGENT", "Complaint_Type": "PACKAGING", "Nature": "DAMAGE & SHORT RECEIPT", "Description": "KC101 - 8 bags wet, N550 - 2 bags wet, 250KG loss"}, {"Sr_No": 55, "FY": "FY2024-25", "Month": "AUG'24", "Month_Short": "AUG", "Month_Order": 5, "Sector": "DOMESTIC NON-RUBBER", "Region": "WEST", "Sales_Person": "KOYEL GUPTA", "Grade": "N330\nKP202", "Grade_Clean": "KP202, N330", "Customer_Name": "PETROTECH CHEMICA", "Customer_Type": "AGENT", "Complaint_Type": "PACKAGING", "Nature": "DAMAGE & SHORT RECEIPT", "Description": "N330 & KP202 damage"}, {"Sr_No": 56, "FY": "FY2024-25", "Month": "AUG'24", "Month_Short": "AUG", "Month_Order": 5, "Sector": "DOMESTIC RUBBER", "Region": "WEST", "Sales_Person": "ANSHUMAN PARASHAR", "Grade": "N330", "Grade_Clean": "N330", "Customer_Name": "CEAT BHANDUP", "Customer_Type": "DIRECT TYRE", "Complaint_Type": "QUALITY", "Nature": "WET / MOISTURE & LUMPS", "Description": "Customer received lumps in N330"}, {"Sr_No": 57, "FY": "FY2024-25", "Month": "AUG'24", "Month_Short": "AUG", "Month_Order": 5, "Sector": "DOMESTIC RUBBER", "Region": "SOUTH", "Sales_Person": "N V PANDIARAJAN", "Grade": "N330", "Grade_Clean": "N330", "Customer_Name": "RIDDHI CHENNAI", "Customer_Type": "AGENT", "Complaint_Type": "PACKAGING", "Nature": "DAMAGE & SHORT RECEIPT", "Description": "N330 - 6 Bags Damage"}, {"Sr_No": 58, "FY": "FY2024-25", "Month": "AUG'24", "Month_Short": "AUG", "Month_Order": 5, "Sector": "DOMESTIC RUBBER", "Region": "SOUTH", "Sales_Person": "N V PANDIARAJAN", "Grade": "N550\nN330", "Grade_Clean": "N330, N550", "Customer_Name": "RIDDHI CHENNAI", "Customer_Type": "AGENT", "Complaint_Type": "PACKAGING", "Nature": "DAMAGE & SHORT RECEIPT", "Description": "N550 & N330 damage"}, {"Sr_No": 59, "FY": "FY2024-25", "Month": "AUG'24", "Month_Short": "AUG", "Month_Order": 5, "Sector": "DOMESTIC RUBBER", "Region": "WEST", "Sales_Person": "ANSHUMAN PARASHAR", "Grade": "N774", "Grade_Clean": "N774", "Customer_Name": "GRINDWELL", "Customer_Type": "AGENT", "Complaint_Type": "LOGISTICS", "Nature": "WET / MOISTURE & LUMPS", "Description": "Vehicle reported in wet condition"}, {"Sr_No": 60, "FY": "FY2024-25", "Month": "AUG'24", "Month_Short": "AUG", "Month_Order": 5, "Sector": "DOMESTIC RUBBER", "Region": "SOUTH", "Sales_Person": "N V PANDIARAJAN", "Grade": "N550", "Grade_Clean": "N550", "Customer_Name": "MOTHERSON", "Customer_Type": "AGENT", "Complaint_Type": "LOGISTICS", "Nature": "WET / MOISTURE & LUMPS", "Description": "Vehicle for Motherson reported in wet condition"}, {"Sr_No": 61, "FY": "FY2024-25", "Month": "AUG'24", "Month_Short": "AUG", "Month_Order": 5, "Sector": "DOMESTIC RUBBER", "Region": "NORTH", "Sales_Person": "ANSHUMAN PARASHAR", "Grade": "OG", "Grade_Clean": "OG", "Customer_Name": "BHAVYA ENTERPRISES", "Customer_Type": "DIRECT NON-TYRE", "Complaint_Type": "PACKAGING", "Nature": "DAMAGE & SHORT RECEIPT", "Description": "Inconsistent packaging weight per bag"}, {"Sr_No": 62, "FY": "FY2024-25", "Month": "AUG'24", "Month_Short": "AUG", "Month_Order": 5, "Sector": "DOMESTIC RUBBER", "Region": "SOUTH", "Sales_Person": "N V PANDIARAJAN", "Grade": "N326\nN326\nN774\nN660", "Grade_Clean": "N326, N660, N774", "Customer_Name": "RIDDHI MADURAI", "Customer_Type": "AGENT", "Complaint_Type": "PACKAGING", "Nature": "DAMAGE & SHORT RECEIPT", "Description": "Multiple grade damage"}, {"Sr_No": 63, "FY": "FY2024-25", "Month": "AUG'24", "Month_Short": "AUG", "Month_Order": 5, "Sector": "DOMESTIC RUBBER", "Region": "SOUTH", "Sales_Person": "N V PANDIARAJAN", "Grade": "N330", "Grade_Clean": "N330", "Customer_Name": "TULSIRAM HYDERABAD", "Customer_Type": "AGENT", "Complaint_Type": "PACKAGING", "Nature": "DAMAGE & SHORT RECEIPT", "Description": "10 kgs shortage"}, {"Sr_No": 64, "FY": "FY2024-25", "Month": "AUG'24", "Month_Short": "AUG", "Month_Order": 5, "Sector": "DOMESTIC RUBBER", "Region": "SOUTH", "Sales_Person": "N V PANDIARAJAN", "Grade": "N660", "Grade_Clean": "N660", "Customer_Name": "TULSIRAM HYDERABAD", "Customer_Type": "AGENT", "Complaint_Type": "PACKAGING", "Nature": "DAMAGE & SHORT RECEIPT", "Description": "8 kgs shortage"}, {"Sr_No": 65, "FY": "FY2024-25", "Month": "AUG'24", "Month_Short": "AUG", "Month_Order": 5, "Sector": "DOMESTIC NON-RUBBER", "Region": "WEST", "Sales_Person": "KOYEL GUPTA", "Grade": "JETEX105", "Grade_Clean": "JETEX105", "Customer_Name": "PETROTECH CHEMICA", "Customer_Type": "AGENT", "Complaint_Type": "PACKAGING", "Nature": "DAMAGE & SHORT RECEIPT", "Description": "2 BAG DAMAGED"}, {"Sr_No": 66, "FY": "FY2024-25", "Month": "AUG'24", "Month_Short": "AUG", "Month_Order": 5, "Sector": "DOMESTIC NON-RUBBER", "Region": "WEST", "Sales_Person": "KOYEL GUPTA", "Grade": "JETEX105", "Grade_Clean": "JETEX105", "Customer_Name": "PETROTECH CHEMICA", "Customer_Type": "AGENT", "Complaint_Type": "PACKAGING", "Nature": "DAMAGE & SHORT RECEIPT", "Description": "1 BAG DAMAGED"}, {"Sr_No": 67, "FY": "FY2024-25", "Month": "AUG'24", "Month_Short": "AUG", "Month_Order": 5, "Sector": "DOMESTIC RUBBER", "Region": "SOUTH", "Sales_Person": "N V PANDIARAJAN", "Grade": "N774\nN550", "Grade_Clean": "N550, N774", "Customer_Name": "POLYHOSE INDIA", "Customer_Type": "DIRECT NON-TYRE", "Complaint_Type": "PACKAGING", "Nature": "FOREIGN PARTICLE / FM", "Description": "Fabric piece and glass particle found"}, {"Sr_No": 68, "FY": "FY2024-25", "Month": "AUG'24", "Month_Short": "AUG", "Month_Order": 5, "Sector": "DOMESTIC RUBBER", "Region": "SOUTH", "Sales_Person": "N V PANDIARAJAN", "Grade": "N339\nN330", "Grade_Clean": "N330, N339", "Customer_Name": "RIDDHI MADURAI", "Customer_Type": "AGENT", "Complaint_Type": "PACKAGING", "Nature": "DAMAGE & SHORT RECEIPT", "Description": "N339 & N330 damage"}, {"Sr_No": 69, "FY": "FY2024-25", "Month": "AUG'24", "Month_Short": "AUG", "Month_Order": 5, "Sector": "DOMESTIC RUBBER", "Region": "SOUTH", "Sales_Person": "N V PANDIARAJAN", "Grade": "N326\nN330\nN550\nN660", "Grade_Clean": "N326, N330, N550, N660", "Customer_Name": "RIDDHI MADURAI", "Customer_Type": "AGENT", "Complaint_Type": "PACKAGING", "Nature": "DAMAGE & SHORT RECEIPT", "Description": "Multiple grade damage 16KG loss"}, {"Sr_No": 70, "FY": "FY2024-25", "Month": "AUG'24", "Month_Short": "AUG", "Month_Order": 5, "Sector": "DOMESTIC RUBBER", "Region": "SOUTH", "Sales_Person": "N V PANDIARAJAN", "Grade": "RG223", "Grade_Clean": "RG223", "Customer_Name": "RIDDHI CHENNAI", "Customer_Type": "AGENT", "Complaint_Type": "PACKAGING", "Nature": "DAMAGE & SHORT RECEIPT", "Description": "RG223 - 3 Bags Damage 20 kgs"}, {"Sr_No": 71, "FY": "FY2024-25", "Month": "AUG'24", "Month_Short": "AUG", "Month_Order": 5, "Sector": "DOMESTIC RUBBER", "Region": "SOUTH", "Sales_Person": "N V PANDIARAJAN", "Grade": "N550\nN234", "Grade_Clean": "N234, N550", "Customer_Name": "RIDDHI CHENNAI", "Customer_Type": "AGENT", "Complaint_Type": "PACKAGING", "Nature": "DAMAGE & SHORT RECEIPT", "Description": "N550 & N234 damage"}, {"Sr_No": 72, "FY": "FY2024-25", "Month": "AUG'24", "Month_Short": "AUG", "Month_Order": 5, "Sector": "DOMESTIC RUBBER", "Region": "SOUTH", "Sales_Person": "N V PANDIARAJAN", "Grade": "N550\nN660", "Grade_Clean": "N550, N660", "Customer_Name": "RIDDHI CHENNAI", "Customer_Type": "AGENT", "Complaint_Type": "PACKAGING", "Nature": "DAMAGE & SHORT RECEIPT", "Description": "N550 & N660 damage 29KG"}, {"Sr_No": 73, "FY": "FY2024-25", "Month": "AUG'24", "Month_Short": "AUG", "Month_Order": 5, "Sector": "DOMESTIC RUBBER", "Region": "SOUTH", "Sales_Person": "N V PANDIARAJAN", "Grade": "N550", "Grade_Clean": "N550", "Customer_Name": "TULSIRAM HYDERABAD", "Customer_Type": "AGENT", "Complaint_Type": "PACKAGING", "Nature": "DAMAGE & SHORT RECEIPT", "Description": "1 BAG DAMAGED 10KG"}, {"Sr_No": 74, "FY": "FY2024-25", "Month": "AUG'24", "Month_Short": "AUG", "Month_Order": 5, "Sector": "DOMESTIC RUBBER", "Region": "SOUTH", "Sales_Person": "N V PANDIARAJAN", "Grade": "N550", "Grade_Clean": "N550", "Customer_Name": "TULSIRAM HYDERABAD", "Customer_Type": "AGENT", "Complaint_Type": "PACKAGING", "Nature": "DAMAGE & SHORT RECEIPT", "Description": "1 BAG DAMAGED 12KG"}, {"Sr_No": 75, "FY": "FY2024-25", "Month": "AUG'24", "Month_Short": "AUG", "Month_Order": 5, "Sector": "DOMESTIC RUBBER", "Region": "WEST", "Sales_Person": "ANSHUMAN PARASHAR", "Grade": "N660", "Grade_Clean": "N660", "Customer_Name": "ARMACELL", "Customer_Type": "AGENT", "Complaint_Type": "PACKAGING", "Nature": "FOREIGN PARTICLE / FM", "Description": "Wooden pieces in carbon material"}, {"Sr_No": 76, "FY": "FY2024-25", "Month": "AUG'24", "Month_Short": "AUG", "Month_Order": 5, "Sector": "DOMESTIC RUBBER", "Region": "SOUTH", "Sales_Person": "N V PANDIARAJAN", "Grade": "N774\nN550", "Grade_Clean": "N550, N774", "Customer_Name": "RIDDHI CHENNAI", "Customer_Type": "AGENT", "Complaint_Type": "PACKAGING", "Nature": "DAMAGE & SHORT RECEIPT", "Description": "N774 & N550 damage 25KG"}, {"Sr_No": 77, "FY": "FY2024-25", "Month": "AUG'24", "Month_Short": "AUG", "Month_Order": 5, "Sector": "DOMESTIC RUBBER", "Region": "NORTH", "Sales_Person": "ANSHUMAN PARASHAR", "Grade": "N550", "Grade_Clean": "N550", "Customer_Name": "SUPREME INDUSTRIES", "Customer_Type": "AGENT", "Complaint_Type": "PACKAGING", "Nature": "DAMAGE & SHORT RECEIPT", "Description": "Shortage 25 kgs due to torn bag N550"}, {"Sr_No": 78, "FY": "FY2024-25", "Month": "SEP'24", "Month_Short": "SEP", "Month_Order": 6, "Sector": "DOMESTIC RUBBER", "Region": "WEST", "Sales_Person": "ANSHUMAN PARASHAR", "Grade": "N550", "Grade_Clean": "N550", "Customer_Name": "CEAT NASIK", "Customer_Type": "DIRECT TYRE", "Complaint_Type": "QUALITY", "Nature": "CHEMICAL PROPERTIES", "Description": "DBP results found out of spec on resampling"}, {"Sr_No": 79, "FY": "FY2024-25", "Month": "SEP'24", "Month_Short": "SEP", "Month_Order": 6, "Sector": "DOMESTIC RUBBER", "Region": "NORTH", "Sales_Person": "ANSHUMAN PARASHAR", "Grade": "N550", "Grade_Clean": "N550", "Customer_Name": "TOYODA GOSEI - SURYA", "Customer_Type": "DIRECT NON-TYRE", "Complaint_Type": "TECHNICAL", "Nature": "MIXING / COMPOUND ISSUE", "Description": "Sticking issue on roll mills - repeated month"}, {"Sr_No": 80, "FY": "FY2024-25", "Month": "SEP'24", "Month_Short": "SEP", "Month_Order": 6, "Sector": "DOMESTIC RUBBER", "Region": "WEST", "Sales_Person": "ANSHUMAN PARASHAR", "Grade": "N330", "Grade_Clean": "N330", "Customer_Name": "CEAT BHANDUP", "Customer_Type": "DIRECT TYRE", "Complaint_Type": "PACKAGING", "Nature": "DAMAGE & SHORT RECEIPT", "Description": "N330 JB damage condition 25KG SHORT"}, {"Sr_No": 81, "FY": "FY2024-25", "Month": "SEP'24", "Month_Short": "SEP", "Month_Order": 6, "Sector": "DOMESTIC RUBBER", "Region": "NORTH", "Sales_Person": "ANSHUMAN PARASHAR", "Grade": "N550", "Grade_Clean": "N550", "Customer_Name": "ANAND MOTOR", "Customer_Type": "AGENT", "Complaint_Type": "TECHNICAL", "Nature": "CHEMICAL PROPERTIES", "Description": "Customer rejected lot due to low hardness"}, {"Sr_No": 82, "FY": "FY2024-25", "Month": "SEP'24", "Month_Short": "SEP", "Month_Order": 6, "Sector": "DOMESTIC RUBBER", "Region": "WEST", "Sales_Person": "ANSHUMAN PARASHAR", "Grade": "N774", "Grade_Clean": "N774", "Customer_Name": "GRINDWELL", "Customer_Type": "AGENT", "Complaint_Type": "LOGISTICS", "Nature": "WET / MOISTURE & LUMPS", "Description": "Grindwell - bags in wet condition again"}, {"Sr_No": 83, "FY": "FY2024-25", "Month": "SEP'24", "Month_Short": "SEP", "Month_Order": 6, "Sector": "DOMESTIC RUBBER", "Region": "SOUTH", "Sales_Person": "N V PANDIARAJAN", "Grade": "N550\nN774", "Grade_Clean": "N550, N774", "Customer_Name": "POLYHOSE INDIA", "Customer_Type": "AGENT", "Complaint_Type": "LOGISTICS", "Nature": "WET / MOISTURE & LUMPS", "Description": "Polyhose rejected 2 consignments - water wet contamination"}, {"Sr_No": 84, "FY": "FY2024-25", "Month": "SEP'24", "Month_Short": "SEP", "Month_Order": 6, "Sector": "DOMESTIC RUBBER", "Region": "NORTH", "Sales_Person": "ANSHUMAN PARASHAR", "Grade": "N550", "Grade_Clean": "N550", "Customer_Name": "ROHIT RUBBER", "Customer_Type": "AGENT", "Complaint_Type": "PACKAGING", "Nature": "DAMAGE & SHORT RECEIPT", "Description": "Packing did not meet stretch-wrap pallet requirements"}, {"Sr_No": 85, "FY": "FY2024-25", "Month": "SEP'24", "Month_Short": "SEP", "Month_Order": 6, "Sector": "DOMESTIC NON-RUBBER", "Region": "NORTH", "Sales_Person": "KOYEL GUPTA", "Grade": "N220", "Grade_Clean": "N220", "Customer_Name": "BHARAT SOLVENT", "Customer_Type": "AGENT", "Complaint_Type": "PACKAGING", "Nature": "DAMAGE & SHORT RECEIPT", "Description": "1 BAG DAMAGED"}, {"Sr_No": 86, "FY": "FY2024-25", "Month": "SEP'24", "Month_Short": "SEP", "Month_Order": 6, "Sector": "DOMESTIC RUBBER", "Region": "NORTH", "Sales_Person": "ANSHUMAN PARASHAR", "Grade": "RG223", "Grade_Clean": "RG223", "Customer_Name": "ALP NISHIKAWA", "Customer_Type": "DIRECT NON-TYRE", "Complaint_Type": "QUALITY", "Nature": "CHEMICAL PROPERTIES", "Description": "Avg/Individual Pallet Hardness, Fines Content, DBP"}, {"Sr_No": 87, "FY": "FY2024-25", "Month": "SEP'24", "Month_Short": "SEP", "Month_Order": 6, "Sector": "DOMESTIC RUBBER", "Region": "NORTH", "Sales_Person": "ANSHUMAN PARASHAR", "Grade": "N550", "Grade_Clean": "N550", "Customer_Name": "PRIME INDIA", "Customer_Type": "AGENT", "Complaint_Type": "TECHNICAL", "Nature": "DISPERSION / SURFACE ISSUE", "Description": "Poor surface finish and poor dispersion"}, {"Sr_No": 88, "FY": "FY2024-25", "Month": "SEP'24", "Month_Short": "SEP", "Month_Order": 6, "Sector": "DOMESTIC RUBBER", "Region": "NORTH", "Sales_Person": "ANSHUMAN PARASHAR", "Grade": "RG223", "Grade_Clean": "RG223", "Customer_Name": "POLYRUB EXTRUSION", "Customer_Type": "DIRECT NON-TYRE", "Complaint_Type": "TECHNICAL", "Nature": "DISPERSION / SURFACE ISSUE", "Description": "Poor surface finish with HSCL RG223"}, {"Sr_No": 89, "FY": "FY2024-25", "Month": "OCT'24", "Month_Short": "OCT", "Month_Order": 7, "Sector": "EXPORT", "Region": "EXPORT", "Sales_Person": "SHAILIK SANYAL", "Grade": "N375", "Grade_Clean": "N375", "Customer_Name": "EU-RETEC", "Customer_Type": null, "Complaint_Type": "PACKAGING", "Nature": "PRINTING / MARKING ISSUE", "Description": "Product labelling requirements not fulfilled"}, {"Sr_No": 90, "FY": "FY2024-25", "Month": "OCT'24", "Month_Short": "OCT", "Month_Order": 7, "Sector": "EXPORT", "Region": "EXPORT", "Sales_Person": "SUBHADEEP CHOWDHURY", "Grade": "N330", "Grade_Clean": "N330", "Customer_Name": "PNIC - THAILAND", "Customer_Type": null, "Complaint_Type": "LOGISTICS", "Nature": "WET / MOISTURE & LUMPS", "Description": "3 wet pallets - hole in container"}, {"Sr_No": 91, "FY": "FY2024-25", "Month": "OCT'24", "Month_Short": "OCT", "Month_Order": 7, "Sector": "DOMESTIC RUBBER", "Region": "SOUTH", "Sales_Person": "N V PANDIARAJAN", "Grade": "N550", "Grade_Clean": "N550", "Customer_Name": "MOTHERSON", "Customer_Type": "DIRECT NON-TYRE", "Complaint_Type": "LOGISTICS", "Nature": "WET / MOISTURE & LUMPS", "Description": "Material received in wet condition"}, {"Sr_No": 92, "FY": "FY2024-25", "Month": "OCT'24", "Month_Short": "OCT", "Month_Order": 7, "Sector": "DOMESTIC NON-RUBBER", "Region": "WEST", "Sales_Person": "KOYEL GUPTA", "Grade": "JETEX107", "Grade_Clean": "JETEX107", "Customer_Name": "J J PLASTALLOY", "Customer_Type": "DIRECT NON-TYRE", "Complaint_Type": "QUALITY", "Nature": "WET / MOISTURE & LUMPS", "Description": "HIGH MOISTURE - result 0.92/0.89 vs spec 0.65"}, {"Sr_No": 93, "FY": "FY2024-25", "Month": "NOV'24", "Month_Short": "NOV", "Month_Order": 8, "Sector": "DOMESTIC RUBBER", "Region": "NORTH", "Sales_Person": "ANSHUMAN PARASHAR", "Grade": "N234", "Grade_Clean": "N234", "Customer_Name": "ATC TIRES", "Customer_Type": "DIRECT TYRE", "Complaint_Type": "PACKAGING", "Nature": "DAMAGE & SHORT RECEIPT", "Description": "2-3 bags with tears, cloth stuck to prevent leakage"}, {"Sr_No": 94, "FY": "FY2024-25", "Month": "NOV'24", "Month_Short": "NOV", "Month_Order": 8, "Sector": "DOMESTIC RUBBER", "Region": "SOUTH", "Sales_Person": "N V PANDIARAJAN", "Grade": "N774\nN550", "Grade_Clean": "N550, N774", "Customer_Name": "RIDDHI CHENNAI", "Customer_Type": "AGENT", "Complaint_Type": "PACKAGING", "Nature": "DAMAGE & SHORT RECEIPT", "Description": "N774 - 06 BAGS DAMAGED; N550 - 03 BAGS DAMAGED"}, {"Sr_No": 95, "FY": "FY2024-25", "Month": "NOV'24", "Month_Short": "NOV", "Month_Order": 8, "Sector": "DOMESTIC RUBBER", "Region": "WEST", "Sales_Person": "ANSHUMAN PARASHAR", "Grade": "N550", "Grade_Clean": "N550", "Customer_Name": "ROHIT RUBBER", "Customer_Type": "AGENT", "Complaint_Type": "TECHNICAL", "Nature": "DISPERSION / SURFACE ISSUE", "Description": "Rough surface finish, glossy surface became matt"}, {"Sr_No": 96, "FY": "FY2024-25", "Month": "NOV'24", "Month_Short": "NOV", "Month_Order": 8, "Sector": "DOMESTIC RUBBER", "Region": "SOUTH", "Sales_Person": "N V PANDIARAJAN", "Grade": "N774", "Grade_Clean": "N774", "Customer_Name": "POLYHOSE INDIA", "Customer_Type": "DIRECT NON-TYRE", "Complaint_Type": "QUALITY", "Nature": "FOREIGN PARTICLE / FM", "Description": "Big size Hard Particle Contamination"}, {"Sr_No": 97, "FY": "FY2024-25", "Month": "NOV'24", "Month_Short": "NOV", "Month_Order": 8, "Sector": "DOMESTIC RUBBER", "Region": "WEST", "Sales_Person": "ANSHUMAN PARASHAR", "Grade": "N660", "Grade_Clean": "N660", "Customer_Name": "ROHIT RUBBER", "Customer_Type": "AGENT", "Complaint_Type": "PACKAGING", "Nature": "DAMAGE & SHORT RECEIPT", "Description": "02 BAGS SHORT 50KG"}, {"Sr_No": 98, "FY": "FY2024-25", "Month": "NOV'24", "Month_Short": "NOV", "Month_Order": 8, "Sector": "DOMESTIC RUBBER", "Region": "WEST", "Sales_Person": "ANSHUMAN PARASHAR", "Grade": "N220", "Grade_Clean": "N220", "Customer_Name": "CEAT BHANDUP", "Customer_Type": "DIRECT TYRE", "Complaint_Type": "PACKAGING", "Nature": "DAMAGE & SHORT RECEIPT", "Description": "01 JB RECEIVED IN DAMAGED CONDITION"}, {"Sr_No": 99, "FY": "FY2024-25", "Month": "NOV'24", "Month_Short": "NOV", "Month_Order": 8, "Sector": "DOMESTIC RUBBER", "Region": "SOUTH", "Sales_Person": "N V PANDIARAJAN", "Grade": "N330\nN774", "Grade_Clean": "N330, N774", "Customer_Name": "RIDDHI CHENNAI", "Customer_Type": "AGENT", "Complaint_Type": "PACKAGING", "Nature": "DAMAGE & SHORT RECEIPT", "Description": "N330 & N774 damage"}, {"Sr_No": 100, "FY": "FY2024-25", "Month": "NOV'24", "Month_Short": "NOV", "Month_Order": 8, "Sector": "DOMESTIC RUBBER", "Region": "SOUTH", "Sales_Person": "N V PANDIARAJAN", "Grade": "N550", "Grade_Clean": "N550", "Customer_Name": "POLYHOSE INDIA", "Customer_Type": "DIRECT NON-TYRE", "Complaint_Type": "QUALITY", "Nature": "CHEMICAL PROPERTIES", "Description": "Batch to batch variation in properties"}, {"Sr_No": 101, "FY": "FY2024-25", "Month": "NOV'24", "Month_Short": "NOV", "Month_Order": 8, "Sector": "DOMESTIC RUBBER", "Region": "SOUTH", "Sales_Person": "N V PANDIARAJAN", "Grade": "N550\nN660", "Grade_Clean": "N550, N660", "Customer_Name": "RIDDHI MADURAI", "Customer_Type": "AGENT", "Complaint_Type": "PACKAGING", "Nature": "DAMAGE & SHORT RECEIPT", "Description": "N550 & N660 damage 12KG"}, {"Sr_No": 102, "FY": "FY2024-25", "Month": "NOV'24", "Month_Short": "NOV", "Month_Order": 8, "Sector": "DOMESTIC NON-RUBBER", "Region": "WEST", "Sales_Person": "KOYEL GUPTA", "Grade": "JETEX 105", "Grade_Clean": "JETEX 105", "Customer_Name": "PETROTECH CHEMICA", "Customer_Type": "AGENT", "Complaint_Type": "PACKAGING", "Nature": "DAMAGE & SHORT RECEIPT", "Description": "1 BAG DAMAGED"}, {"Sr_No": 103, "FY": "FY2024-25", "Month": "NOV'24", "Month_Short": "NOV", "Month_Order": 8, "Sector": "DOMESTIC NON-RUBBER", "Region": "WEST", "Sales_Person": "KOYEL GUPTA", "Grade": "N220P\nKC120", "Grade_Clean": "KC120, N220P", "Customer_Name": "BHARAT SOLVENT", "Customer_Type": "AGENT", "Complaint_Type": "PACKAGING", "Nature": "DAMAGE & SHORT RECEIPT", "Description": "N220P & KC120 shortage"}, {"Sr_No": 104, "FY": "FY2024-25", "Month": "NOV'24", "Month_Short": "NOV", "Month_Order": 8, "Sector": "DOMESTIC NON-RUBBER", "Region": "WEST", "Sales_Person": "KOYEL GUPTA", "Grade": "JETEX 105", "Grade_Clean": "JETEX 105", "Customer_Name": "PETROTECH CHEMICA", "Customer_Type": "AGENT", "Complaint_Type": "PACKAGING", "Nature": "DAMAGE & SHORT RECEIPT", "Description": "3 BAG DAMAGED 75KG"}, {"Sr_No": 105, "FY": "FY2024-25", "Month": "NOV'24", "Month_Short": "NOV", "Month_Order": 8, "Sector": "DOMESTIC RUBBER", "Region": "SOUTH", "Sales_Person": "N V PANDIARAJAN", "Grade": "N550\nN774", "Grade_Clean": "N550, N774", "Customer_Name": "RIDDHI CHENNAI", "Customer_Type": "AGENT", "Complaint_Type": "PACKAGING", "Nature": "DAMAGE & SHORT RECEIPT", "Description": "N550 & N774 damage 22KG"}, {"Sr_No": 106, "FY": "FY2024-25", "Month": "DEC'24", "Month_Short": "DEC", "Month_Order": 9, "Sector": "DOMESTIC NON-RUBBER", "Region": "WEST", "Sales_Person": "KOYEL GUPTA", "Grade": "N330", "Grade_Clean": "N330", "Customer_Name": "PETROTECH CHEMICA", "Customer_Type": "AGENT", "Complaint_Type": "PACKAGING", "Nature": "DAMAGE & SHORT RECEIPT", "Description": "5 BAG DAMAGED 125KG"}, {"Sr_No": 107, "FY": "FY2024-25", "Month": "DEC'24", "Month_Short": "DEC", "Month_Order": 9, "Sector": "DOMESTIC RUBBER", "Region": "SOUTH", "Sales_Person": "N V PANDIARAJAN", "Grade": "N339", "Grade_Clean": "N339", "Customer_Name": "ESS VEE", "Customer_Type": "DIRECT NON-TYRE", "Complaint_Type": "PACKAGING", "Nature": "DAMAGE & SHORT RECEIPT", "Description": "Inner paper reads N220, outer reads N339 - quarantine"}, {"Sr_No": 108, "FY": "FY2024-25", "Month": "DEC'24", "Month_Short": "DEC", "Month_Order": 9, "Sector": "DOMESTIC NON-RUBBER", "Region": "SOUTH", "Sales_Person": "KOYEL GUPTA", "Grade": "KC120", "Grade_Clean": "KC120", "Customer_Name": "BLEND COLOURS", "Customer_Type": "DIRECT NON-TYRE", "Complaint_Type": "TECHNICAL", "Nature": "DISPERSION / SURFACE ISSUE", "Description": "Porosity issue, poor dispersion and density"}, {"Sr_No": 109, "FY": "FY2024-25", "Month": "DEC'24", "Month_Short": "DEC", "Month_Order": 9, "Sector": "DOMESTIC NON-RUBBER", "Region": "SOUTH", "Sales_Person": "KOYEL GUPTA", "Grade": "KC120", "Grade_Clean": "KC120", "Customer_Name": "BLEND COLOURS", "Customer_Type": "DIRECT NON-TYRE", "Complaint_Type": "TECHNICAL", "Nature": "DISPERSION / SURFACE ISSUE", "Description": "Porosity issue, poor dispersion and density"}, {"Sr_No": 110, "FY": "FY2024-25", "Month": "DEC'24", "Month_Short": "DEC", "Month_Order": 9, "Sector": "EXPORT", "Region": "EXPORT", "Sales_Person": "RAVI SHARMA", "Grade": "RG315", "Grade_Clean": "RG315", "Customer_Name": "HUTCHINSON", "Customer_Type": "DIRECT NON-TYRE", "Complaint_Type": "QUALITY", "Nature": "WET / MOISTURE & LUMPS", "Description": "Moisture in Carbon Black"}, {"Sr_No": 111, "FY": "FY2024-25", "Month": "DEC'24", "Month_Short": "DEC", "Month_Order": 9, "Sector": "DOMESTIC RUBBER", "Region": "SOUTH", "Sales_Person": "N V PANDIARAJAN", "Grade": "N660\nN550", "Grade_Clean": "N550, N660", "Customer_Name": "RIDDHI MADURAI", "Customer_Type": "AGENT", "Complaint_Type": "PACKAGING", "Nature": "DAMAGE & SHORT RECEIPT", "Description": "N660 & N550 damage 21KG"}, {"Sr_No": 112, "FY": "FY2024-25", "Month": "DEC'24", "Month_Short": "DEC", "Month_Order": 9, "Sector": "DOMESTIC RUBBER", "Region": "NORTH", "Sales_Person": "ANSHUMAN PARASHAR", "Grade": "N550", "Grade_Clean": "N550", "Customer_Name": "TOYODA GOSEI - SURYA", "Customer_Type": "DIRECT NON-TYRE", "Complaint_Type": "TECHNICAL", "Nature": "MIXING / COMPOUND ISSUE", "Description": "Strainer Pressure increase, T5 reduced"}, {"Sr_No": 113, "FY": "FY2024-25", "Month": "DEC'24", "Month_Short": "DEC", "Month_Order": 9, "Sector": "DOMESTIC RUBBER", "Region": "WEST", "Sales_Person": "ANSHUMAN PARASHAR", "Grade": "N550", "Grade_Clean": "N550", "Customer_Name": "CEAT BHANDUP", "Customer_Type": "DIRECT TYRE", "Complaint_Type": "PACKAGING", "Nature": "DAMAGE & SHORT RECEIPT", "Description": "Loop broken - bag swung towards operator. Near-fatal safety incident"}, {"Sr_No": 114, "FY": "FY2024-25", "Month": "DEC'24", "Month_Short": "DEC", "Month_Order": 9, "Sector": "DOMESTIC RUBBER", "Region": "WEST", "Sales_Person": "ANSHUMAN PARASHAR", "Grade": "N550", "Grade_Clean": "N550", "Customer_Name": "TRIDENT RUBBER", "Customer_Type": "DIRECT NON-TYRE", "Complaint_Type": "TECHNICAL", "Nature": "VISCOSITY / RHEOLOGY", "Description": "LOW MOONEY VISCOSITY"}, {"Sr_No": 115, "FY": "FY2024-25", "Month": "DEC'24", "Month_Short": "DEC", "Month_Order": 9, "Sector": "DOMESTIC RUBBER", "Region": "WEST", "Sales_Person": "ANSHUMAN PARASHAR", "Grade": "N330", "Grade_Clean": "N330", "Customer_Name": "CEAT BHANDUP", "Customer_Type": "DIRECT TYRE", "Complaint_Type": "PACKAGING", "Nature": "DAMAGE & SHORT RECEIPT", "Description": "1 Bag Hanging hook damaged before unloading"}, {"Sr_No": 116, "FY": "FY2024-25", "Month": "DEC'24", "Month_Short": "DEC", "Month_Order": 9, "Sector": "DOMESTIC RUBBER", "Region": "SOUTH", "Sales_Person": "N V PANDIARAJAN", "Grade": "N550\nN774", "Grade_Clean": "N550, N774", "Customer_Name": "POLYHOSE INDIA", "Customer_Type": "DIRECT NON-TYRE", "Complaint_Type": "QUALITY", "Nature": "FOREIGN PARTICLE / FM", "Description": "FOREIGN PARTICLE CONTAMINATION"}, {"Sr_No": 117, "FY": "FY2024-25", "Month": "JAN'25", "Month_Short": "JAN", "Month_Order": 10, "Sector": "DOMESTIC RUBBER", "Region": "NORTH", "Sales_Person": "ANSHUMAN PARASHAR", "Grade": "N774\nRG223", "Grade_Clean": "N774, RG223", "Customer_Name": "ALP NISHIKAWA", "Customer_Type": "DIRECT NON-TYRE", "Complaint_Type": "PACKAGING", "Nature": "DAMAGE & SHORT RECEIPT", "Description": "Bags in tilted condition, torn while unloading"}, {"Sr_No": 118, "FY": "FY2024-25", "Month": "JAN'25", "Month_Short": "JAN", "Month_Order": 10, "Sector": "DOMESTIC NON-RUBBER", "Region": "WEST", "Sales_Person": "KOYEL GUPTA", "Grade": "N550", "Grade_Clean": "N550", "Customer_Name": "PETROTECH CHEMICA", "Customer_Type": "AGENT", "Complaint_Type": "PACKAGING", "Nature": "DAMAGE & SHORT RECEIPT", "Description": "1 BAG DAMAGED"}, {"Sr_No": 119, "FY": "FY2024-25", "Month": "FEB'25", "Month_Short": "FEB", "Month_Order": 11, "Sector": "EXPORT", "Region": "EXPORT", "Sales_Person": "RAVI SHARMA", "Grade": "N550", "Grade_Clean": "N550", "Customer_Name": "TECHNO RUBBER", "Customer_Type": null, "Complaint_Type": "QUALITY", "Nature": "WET / MOISTURE & LUMPS", "Description": "Lump issues causing unmixed carbon particles"}, {"Sr_No": 120, "FY": "FY2024-25", "Month": "FEB'25", "Month_Short": "FEB", "Month_Order": 11, "Sector": "DOMESTIC RUBBER", "Region": "SOUTH", "Sales_Person": "N V PANDIARAJAN", "Grade": "N330", "Grade_Clean": "N330", "Customer_Name": "TVS SRICHAKRA", "Customer_Type": "DIRECT TYRE", "Complaint_Type": "PACKAGING", "Nature": "FOREIGN PARTICLE / FM", "Description": "METAL PART FOUND"}, {"Sr_No": 121, "FY": "FY2024-25", "Month": "FEB'25", "Month_Short": "FEB", "Month_Order": 11, "Sector": "EXPORT", "Region": "EXPORT", "Sales_Person": "RAVI SHARMA", "Grade": "N550", "Grade_Clean": "N550", "Customer_Name": "TECHNO RUBBER", "Customer_Type": null, "Complaint_Type": "PACKAGING", "Nature": "DAMAGE & SHORT RECEIPT", "Description": "Bags do not stay erect - tilt causing safety concerns"}, {"Sr_No": 122, "FY": "FY2024-25", "Month": "FEB'25", "Month_Short": "FEB", "Month_Order": 11, "Sector": "DOMESTIC RUBBER", "Region": "WEST", "Sales_Person": "ANSHUMAN PARASHAR", "Grade": "N330", "Grade_Clean": "N330", "Customer_Name": "CEAT BHANDUP", "Customer_Type": "DIRECT TYRE", "Complaint_Type": "PACKAGING", "Nature": "DAMAGE & SHORT RECEIPT", "Description": "Received 01 JB damaged 50KG loss"}, {"Sr_No": 123, "FY": "FY2024-25", "Month": "FEB'25", "Month_Short": "FEB", "Month_Order": 11, "Sector": "DOMESTIC RUBBER", "Region": "SOUTH", "Sales_Person": "N V PANDIARAJAN", "Grade": "N330", "Grade_Clean": "N330", "Customer_Name": "RIDDHI MADURAI", "Customer_Type": "AGENT", "Complaint_Type": "PACKAGING", "Nature": "DAMAGE & SHORT RECEIPT", "Description": "1 BAG DAMAGED"}, {"Sr_No": 124, "FY": "FY2024-25", "Month": "FEB'25", "Month_Short": "FEB", "Month_Order": 11, "Sector": "DOMESTIC NON-RUBBER", "Region": "SOUTH", "Sales_Person": "KOYEL GUPTA", "Grade": "N772", "Grade_Clean": "N772", "Customer_Name": "KONKAN SPECIALITY", "Customer_Type": "DIRECT NON-TYRE", "Complaint_Type": "PACKAGING", "Nature": "DAMAGE & SHORT RECEIPT", "Description": "SHORT QUANTITY IN ALL JBs 98KG LOSS"}, {"Sr_No": 125, "FY": "FY2024-25", "Month": "FEB'25", "Month_Short": "FEB", "Month_Order": 11, "Sector": "DOMESTIC NON-RUBBER", "Region": "SOUTH", "Sales_Person": "KOYEL GUPTA", "Grade": "JETEX 145", "Grade_Clean": "JETEX 145", "Customer_Name": "ASIAN PAINTS", "Customer_Type": "DIRECT NON-TYRE", "Complaint_Type": "PACKAGING", "Nature": "DAMAGE & SHORT RECEIPT", "Description": "Batch number overlapped, not visible - material returned"}, {"Sr_No": 126, "FY": "FY2024-25", "Month": "FEB'25", "Month_Short": "FEB", "Month_Order": 11, "Sector": "DOMESTIC RUBBER", "Region": "SOUTH", "Sales_Person": "N V PANDIARAJAN", "Grade": "N550\nN774", "Grade_Clean": "N550, N774", "Customer_Name": "RIDDHI CHENNAI", "Customer_Type": "AGENT", "Complaint_Type": "PACKAGING", "Nature": "DAMAGE & SHORT RECEIPT", "Description": "N550 & N774 damage 54KG"}, {"Sr_No": 127, "FY": "FY2024-25", "Month": "FEB'25", "Month_Short": "FEB", "Month_Order": 11, "Sector": "DOMESTIC RUBBER", "Region": "SOUTH", "Sales_Person": "N V PANDIARAJAN", "Grade": "N220", "Grade_Clean": "N220", "Customer_Name": "ESS VEE", "Customer_Type": "AGENT", "Complaint_Type": "PACKAGING", "Nature": "PRINTING / MARKING ISSUE", "Description": "N220 invoiced but N339 on outer bag"}, {"Sr_No": 128, "FY": "FY2024-25", "Month": "FEB'25", "Month_Short": "FEB", "Month_Order": 11, "Sector": "EXPORT", "Region": "EXPORT", "Sales_Person": "RAVI SHARMA", "Grade": "N550", "Grade_Clean": "N550", "Customer_Name": "TECHNO RUBBER", "Customer_Type": null, "Complaint_Type": "QUALITY", "Nature": "WET / MOISTURE & LUMPS", "Description": "Continuous lump issues + rust contamination"}, {"Sr_No": 129, "FY": "FY2024-25", "Month": "FEB'25", "Month_Short": "FEB", "Month_Order": 11, "Sector": "EXPORT", "Region": "EXPORT", "Sales_Person": "RAVI SHARMA", "Grade": "RG223", "Grade_Clean": "RG223", "Customer_Name": "W&S (CARBODY)", "Customer_Type": null, "Complaint_Type": "PACKAGING", "Nature": "FOREIGN PARTICLE / FM", "Description": "Nut bolt found in SIEVE at Warehouse"}, {"Sr_No": 130, "FY": "FY2024-25", "Month": "MAR'25", "Month_Short": "MAR", "Month_Order": 12, "Sector": "DOMESTIC NON-RUBBER", "Region": "SOUTH", "Sales_Person": "KOYEL GUPTA", "Grade": "KC101", "Grade_Clean": "KC101", "Customer_Name": "PLASTIBLENDS INDIA", "Customer_Type": "DIRECT NON-TYRE", "Complaint_Type": "TECHNICAL", "Nature": "DISPERSION / SURFACE ISSUE", "Description": "Mesh Choking / Dispersion issues"}, {"Sr_No": 131, "FY": "FY2024-25", "Month": "MAR'25", "Month_Short": "MAR", "Month_Order": 12, "Sector": "DOMESTIC NON-RUBBER", "Region": "WEST", "Sales_Person": "KOYEL GUPTA", "Grade": "N326", "Grade_Clean": "N326", "Customer_Name": "PETROTECH CHEMICA", "Customer_Type": "AGENT", "Complaint_Type": "PACKAGING", "Nature": "DAMAGE & SHORT RECEIPT", "Description": "Improper mouth sealing - 2MT rejected"}, {"Sr_No": 132, "FY": "FY2024-25", "Month": "MAR'25", "Month_Short": "MAR", "Month_Order": 12, "Sector": "DOMESTIC RUBBER", "Region": "NORTH", "Sales_Person": "ANSHUMAN PARASHAR", "Grade": "RG223", "Grade_Clean": "RG223", "Customer_Name": "ALP NISHIKAWA (SANAND)", "Customer_Type": "DIRECT NON-TYRE", "Complaint_Type": "LOGISTICS", "Nature": "WET / MOISTURE & LUMPS", "Description": "RG223 JB found in wet condition"}, {"Sr_No": 133, "FY": "FY2024-25", "Month": "MAR'25", "Month_Short": "MAR", "Month_Order": 12, "Sector": "DOMESTIC NON-RUBBER", "Region": "WEST", "Sales_Person": "KOYEL GUPTA", "Grade": "N330\nN326", "Grade_Clean": "N326, N330", "Customer_Name": "PETROTECH CHEMICA", "Customer_Type": "AGENT", "Complaint_Type": "PACKAGING", "Nature": "DAMAGE & SHORT RECEIPT", "Description": "N330 & N326 damage 100KG"}, {"Sr_No": 134, "FY": "FY2024-25", "Month": "MAR'25", "Month_Short": "MAR", "Month_Order": 12, "Sector": "DOMESTIC NON-RUBBER", "Region": "WEST", "Sales_Person": "KOYEL GUPTA", "Grade": "KC101\nKC120", "Grade_Clean": "KC101, KC120", "Customer_Name": "PETROTECH CHEMICA", "Customer_Type": "AGENT", "Complaint_Type": "PACKAGING", "Nature": "DAMAGE & SHORT RECEIPT", "Description": "KC101 & KC120 damage 100KG"}, {"Sr_No": 135, "FY": "FY2024-25", "Month": "MAR'25", "Month_Short": "MAR", "Month_Order": 12, "Sector": "DOMESTIC RUBBER", "Region": "NORTH", "Sales_Person": "ANSHUMAN PARASHAR", "Grade": "N550", "Grade_Clean": "N550", "Customer_Name": "KM IMPEX", "Customer_Type": "AGENT", "Complaint_Type": "QUALITY", "Nature": "WET / MOISTURE & LUMPS", "Description": "Customer found lumps in JBs of N550"}, {"Sr_No": 136, "FY": "FY2024-25", "Month": "MAR'25", "Month_Short": "MAR", "Month_Order": 12, "Sector": "DOMESTIC RUBBER", "Region": "WEST", "Sales_Person": "ANSHUMAN PARASHAR", "Grade": "RG223", "Grade_Clean": "RG223", "Customer_Name": "GOLD SEAL SARGUMMI", "Customer_Type": "DIRECT NON-TYRE", "Complaint_Type": "QUALITY", "Nature": "WET / MOISTURE & LUMPS", "Description": "Lump formation and high moisture"}, {"Sr_No": 137, "FY": "FY2024-25", "Month": "MAR'25", "Month_Short": "MAR", "Month_Order": 12, "Sector": "DOMESTIC NON-RUBBER", "Region": "WEST", "Sales_Person": "KOYEL GUPTA", "Grade": "N330", "Grade_Clean": "N330", "Customer_Name": "PETROTECH CHEMICA", "Customer_Type": "AGENT", "Complaint_Type": "PACKAGING", "Nature": "DAMAGE & SHORT RECEIPT", "Description": "1 BAG DAMAGED"}, {"Sr_No": 138, "FY": "FY2024-25", "Month": "MAR'25", "Month_Short": "MAR", "Month_Order": 12, "Sector": "DOMESTIC NON-RUBBER", "Region": "WEST", "Sales_Person": "KOYEL GUPTA", "Grade": "KC101", "Grade_Clean": "KC101", "Customer_Name": "PETROTECH CHEMICA", "Customer_Type": "AGENT", "Complaint_Type": "PACKAGING", "Nature": "DAMAGE & SHORT RECEIPT", "Description": "2 BAG DAMAGED"}, {"Sr_No": 139, "FY": "FY2024-25", "Month": "MAR'25", "Month_Short": "MAR", "Month_Order": 12, "Sector": "EXPORT", "Region": "EXPORT", "Sales_Person": "RAVI SHARMA", "Grade": "N550", "Grade_Clean": "N550", "Customer_Name": "W&S (BODE)", "Customer_Type": null, "Complaint_Type": "TECHNICAL", "Nature": "MIXING / COMPOUND ISSUE", "Description": "Lower hardness, tensile strength and MH"}, {"Sr_No": 140, "FY": "FY2024-25", "Month": "MAR'25", "Month_Short": "MAR", "Month_Order": 12, "Sector": "EXPORT", "Region": "EXPORT", "Sales_Person": "RAVI SHARMA", "Grade": "RG223", "Grade_Clean": "RG223", "Customer_Name": "W&S (HEXPOL UNICA)", "Customer_Type": null, "Complaint_Type": "TECHNICAL", "Nature": "VISCOSITY / RHEOLOGY", "Description": "Very low viscosity"}, {"Sr_No": 141, "FY": "FY2024-25", "Month": "MAR'25", "Month_Short": "MAR", "Month_Order": 12, "Sector": "DOMESTIC RUBBER", "Region": "NORTH", "Sales_Person": "ANSHUMAN PARASHAR", "Grade": "N330", "Grade_Clean": "N330", "Customer_Name": "CEAT BHANDUP", "Customer_Type": "DIRECT TYRE", "Complaint_Type": "PACKAGING", "Nature": "DAMAGE & SHORT RECEIPT", "Description": "Customer received JB in damage condition"}, {"Sr_No": 1, "FY": "FY2025-26", "Month": "Apr.25", "Month_Short": "APR", "Month_Order": 1, "Sector": "EXPORT", "Region": "EXPORT", "Sales_Person": "RAVI SHARMA", "Grade": "N550 JB", "Grade_Clean": "N550", "Customer_Name": "TECHNO RUBBER", "Customer_Type": "DIRECT NON-TYRE", "Complaint_Type": "QUALITY", "Nature": "CHEMICAL PROPERTIES", "Description": "High Sieve Residue and FM contamination"}, {"Sr_No": 2, "FY": "FY2025-26", "Month": "Apr.25", "Month_Short": "APR", "Month_Order": 1, "Sector": "EXPORT", "Region": "EXPORT", "Sales_Person": "RAVI SHARMA", "Grade": "N550 JB", "Grade_Clean": "N550", "Customer_Name": "W&S", "Customer_Type": "DISTRIBUTOR", "Complaint_Type": "QUALITY", "Nature": "CHEMICAL PROPERTIES", "Description": "Pellet Hardness variation"}, {"Sr_No": 3, "FY": "FY2025-26", "Month": "Apr.25", "Month_Short": "APR", "Month_Order": 1, "Sector": "DOMESTIC RUBBER", "Region": "WEST", "Sales_Person": "ANSHUMAN PARASHAR", "Grade": "N330 JB", "Grade_Clean": "N330", "Customer_Name": "CEAT BHANDUP", "Customer_Type": "DIRECT TYRE", "Complaint_Type": "LOGISTICS", "Nature": "DAMAGE & SHORT RECEIPT", "Description": "Repeated bag damage issue"}, {"Sr_No": 4, "FY": "FY2025-26", "Month": "Apr.25", "Month_Short": "APR", "Month_Order": 1, "Sector": "DOMESTIC RUBBER", "Region": "NORTH", "Sales_Person": "ANSHUMAN PARASHAR", "Grade": "N330 JB", "Grade_Clean": "N330", "Customer_Name": "GATES INDIA", "Customer_Type": "DIRECT NON-TYRE", "Complaint_Type": "PACKAGING", "Nature": "FOREIGN PARTICLE / FM", "Description": "Foreign object in N330 material"}, {"Sr_No": 5, "FY": "FY2025-26", "Month": "Apr.25", "Month_Short": "APR", "Month_Order": 1, "Sector": "DOMESTIC RUBBER", "Region": "SOUTH", "Sales_Person": "N V PANDIARAJAN", "Grade": "N220 PB\nN339 PB", "Grade_Clean": "N220, N339", "Customer_Name": "M/S SUNDARAM, CHENNAI", "Customer_Type": "DIRECT NON-TYRE", "Complaint_Type": "PACKAGING", "Nature": "PRINTING / MARKING ISSUE", "Description": "Mixed up with Grade marking on bags"}, {"Sr_No": 6, "FY": "FY2025-26", "Month": "Apr.25", "Month_Short": "APR", "Month_Order": 1, "Sector": "DOMESTIC RUBBER", "Region": "SOUTH", "Sales_Person": "N V PANDIARAJAN", "Grade": "N660 JB", "Grade_Clean": "N660", "Customer_Name": "PARKER", "Customer_Type": "DIRECT NON-TYRE", "Complaint_Type": "QUALITY", "Nature": "WET / MOISTURE & LUMPS", "Description": "Lumps in Carbon Black"}, {"Sr_No": 7, "FY": "FY2025-26", "Month": "Apr.25", "Month_Short": "APR", "Month_Order": 1, "Sector": "DOMESTIC RUBBER", "Region": "WEST", "Sales_Person": "ANSHUMAN PARASHAR", "Grade": "N326 JB\nN339 JB", "Grade_Clean": "N326, N339", "Customer_Name": "CONTINENTAL INDIA", "Customer_Type": "DIRECT TYRE", "Complaint_Type": "PACKAGING", "Nature": "MISSING BAG", "Description": "Pocket missing & identification tag risk"}, {"Sr_No": 8, "FY": "FY2025-26", "Month": "Apr.25", "Month_Short": "APR", "Month_Order": 1, "Sector": "DOMESTIC RUBBER", "Region": "SOUTH", "Sales_Person": "N V PANDIARAJAN", "Grade": "N339 JB", "Grade_Clean": "N339", "Customer_Name": "MOTHERSON", "Customer_Type": "DIRECT NON-TYRE", "Complaint_Type": "TECHNICAL", "Nature": "DISPERSION / SURFACE ISSUE", "Description": "Dispersion issue in N339 (JB)"}, {"Sr_No": 9, "FY": "FY2025-26", "Month": "Apr.25", "Month_Short": "APR", "Month_Order": 1, "Sector": "DOMESTIC RUBBER", "Region": "WEST", "Sales_Person": "ANSHUMAN PARASHAR", "Grade": "N330 JB", "Grade_Clean": "N330", "Customer_Name": "BRIDGESTONE PUNE", "Customer_Type": "DIRECT TYRE", "Complaint_Type": "PACKAGING", "Nature": "DAMAGE & SHORT RECEIPT", "Description": "Torn bag, 125 KG loss"}, {"Sr_No": 10, "FY": "FY2025-26", "Month": "Apr.25", "Month_Short": "APR", "Month_Order": 1, "Sector": "DOMESTIC RUBBER", "Region": "NORTH", "Sales_Person": "ANSHUMAN PARASHAR", "Grade": "RG223 JB", "Grade_Clean": "RG223", "Customer_Name": "ALP NISHIKAWA (LALRU)", "Customer_Type": "DIRECT NON-TYRE", "Complaint_Type": "QUALITY", "Nature": "WET / MOISTURE & LUMPS", "Description": "High Moisture in Carbon Black"}, {"Sr_No": 11, "FY": "FY2025-26", "Month": "May.25", "Month_Short": "MAY", "Month_Order": 2, "Sector": "DOMESTIC RUBBER", "Region": "EAST", "Sales_Person": "BAISHAKHI MITRA", "Grade": "E273 PB", "Grade_Clean": "E273", "Customer_Name": "DDEV PLASTIKS", "Customer_Type": "DIRECT NON-TYRE", "Complaint_Type": "QUALITY", "Nature": "WET / MOISTURE & LUMPS", "Description": "High moisture, material caking and clogging"}, {"Sr_No": 12, "FY": "FY2025-26", "Month": "May.25", "Month_Short": "MAY", "Month_Order": 2, "Sector": "DOMESTIC RUBBER", "Region": "SOUTH", "Sales_Person": "BAISHAKHI MITRA", "Grade": "KC101 PB", "Grade_Clean": "KC101", "Customer_Name": "TULSIRAM HYDERABAD", "Customer_Type": "AGENT", "Complaint_Type": "PACKAGING", "Nature": "DAMAGE & SHORT RECEIPT", "Description": "One bag damage 10 Kg shortage"}, {"Sr_No": 13, "FY": "FY2025-26", "Month": "May.25", "Month_Short": "MAY", "Month_Order": 2, "Sector": "DOMESTIC RUBBER", "Region": "EAST", "Sales_Person": "SHUBHASISH ROY", "Grade": "KC120 PB", "Grade_Clean": "KC120", "Customer_Name": "SONALI POLYPLAST", "Customer_Type": "DIRECT NON-TYRE", "Complaint_Type": "PACKAGING", "Nature": "DAMAGE & SHORT RECEIPT", "Description": "01 BAG (25KG) RECEIVED SHORT"}, {"Sr_No": 14, "FY": "FY2025-26", "Month": "Jun.25", "Month_Short": "JUN", "Month_Order": 3, "Sector": "DOMESTIC RUBBER", "Region": "NORTH", "Sales_Person": "KOYEL GUPTA", "Grade": "N330 PB", "Grade_Clean": "N330", "Customer_Name": "BHARAT SOLVENT", "Customer_Type": "STOCKIST", "Complaint_Type": "PACKAGING", "Nature": "DAMAGE & SHORT RECEIPT", "Description": "2 TORN BAGS, 4 KG SHORTAGE"}, {"Sr_No": 15, "FY": "FY2025-26", "Month": "Jun.25", "Month_Short": "JUN", "Month_Order": 3, "Sector": "DOMESTIC RUBBER", "Region": "WEST", "Sales_Person": "ANSHUMAN PARASHAR", "Grade": "N220 JB", "Grade_Clean": "N220", "Customer_Name": "CEAT BHANDUP", "Customer_Type": "DIRECT TYRE", "Complaint_Type": "LOGISTICS", "Nature": "DAMAGE & SHORT RECEIPT", "Description": "JBs in damaged condition - customer requested return"}, {"Sr_No": 16, "FY": "FY2025-26", "Month": "Jun.25", "Month_Short": "JUN", "Month_Order": 3, "Sector": "DOMESTIC RUBBER", "Region": "SOUTH", "Sales_Person": "KOYEL GUPTA", "Grade": "KC101 PB", "Grade_Clean": "KC101", "Customer_Name": "TULSIRAM HYDERABAD", "Customer_Type": "STOCKIST", "Complaint_Type": "QUALITY", "Nature": "FOREIGN PARTICLE / FM", "Description": "Particles attracting iron rod"}, {"Sr_No": 17, "FY": "FY2025-26", "Month": "Jun.25", "Month_Short": "JUN", "Month_Order": 3, "Sector": "DOMESTIC RUBBER", "Region": "SOUTH", "Sales_Person": "N V PANDIARAJAN", "Grade": null, "Grade_Clean": null, "Customer_Name": "PARKER (HYDERABAD)", "Customer_Type": "DIRECT NON-TYRE", "Complaint_Type": "TECHNICAL", "Nature": "MIXING / COMPOUND ISSUE", "Description": "Surface defects, compound volatile test failed"}, {"Sr_No": 18, "FY": "FY2025-26", "Month": "Jun.25", "Month_Short": "JUN", "Month_Order": 3, "Sector": "DOMESTIC RUBBER", "Region": "WEST", "Sales_Person": "KOYEL GUPTA", "Grade": "JETEX105 PB", "Grade_Clean": "JETEX105", "Customer_Name": "PETROTECH CHEMICA", "Customer_Type": "STOCKIST", "Complaint_Type": "TECHNICAL", "Nature": "CHEMICAL PROPERTIES", "Description": "Very high FPV in masterbatch, lot variation"}, {"Sr_No": 19, "FY": "FY2025-26", "Month": "Jun.25", "Month_Short": "JUN", "Month_Order": 3, "Sector": "DOMESTIC RUBBER", "Region": "WEST", "Sales_Person": "ANSHUMAN PARASHAR", "Grade": "N660 JB", "Grade_Clean": "N660", "Customer_Name": "BRIDGESTONE PUNE", "Customer_Type": "DIRECT TYRE", "Complaint_Type": "PACKAGING", "Nature": "PRINTING / MARKING ISSUE", "Description": "Wrong material code WH23 marked for N660, actual WH36"}, {"Sr_No": 20, "FY": "FY2025-26", "Month": "Jun.25", "Month_Short": "JUN", "Month_Order": 3, "Sector": "DOMESTIC RUBBER", "Region": "SOUTH", "Sales_Person": "KOYEL GUPTA", "Grade": "KC101 PB", "Grade_Clean": "KC101", "Customer_Name": "BLEND COLOURS", "Customer_Type": "DIRECT NON-TYRE", "Complaint_Type": "TECHNICAL", "Nature": "DISPERSION / SURFACE ISSUE", "Description": "Dispersion issue, strand roughness, porosity"}, {"Sr_No": 21, "FY": "FY2025-26", "Month": "Jun.25", "Month_Short": "JUN", "Month_Order": 3, "Sector": "EXPORT", "Region": "WEST", "Sales_Person": "RAVI SHARMA", "Grade": "RG223 JB", "Grade_Clean": "RG223", "Customer_Name": "W&S (HUTCHINSON)", "Customer_Type": "DIRECT NON-TYRE", "Complaint_Type": "TECHNICAL", "Nature": "VISCOSITY / RHEOLOGY", "Description": "Viscosity increase in compounds using RG223"}, {"Sr_No": 22, "FY": "FY2025-26", "Month": "Jul'25", "Month_Short": "JUL", "Month_Order": 4, "Sector": "DOMESTIC RUBBER", "Region": "NORTH", "Sales_Person": "ANSHUMAN PARASHAR", "Grade": "N550 JB", "Grade_Clean": "N550", "Customer_Name": "TOYODA GOSEI - SURYA", "Customer_Type": "STOCKIST", "Complaint_Type": "TECHNICAL", "Nature": "MIXING / COMPOUND ISSUE", "Description": "Stickiness / high moisture in one bag"}, {"Sr_No": 23, "FY": "FY2025-26", "Month": "Jul'25", "Month_Short": "JUL", "Month_Order": 4, "Sector": "DOMESTIC RUBBER", "Region": "SOUTH", "Sales_Person": "N V PANDIARAJAN", "Grade": "RG223", "Grade_Clean": "RG223", "Customer_Name": "MOTHERSON", "Customer_Type": "DIRECT NON-TYRE", "Complaint_Type": "LOGISTICS", "Nature": "WET / MOISTURE & LUMPS", "Description": "Wet carbon, moisture lumps, 2 bags rejected"}, {"Sr_No": 24, "FY": "FY2025-26", "Month": "Jul'25", "Month_Short": "JUL", "Month_Order": 4, "Sector": "DOMESTIC NON-RUBBER", "Region": "SOUTH", "Sales_Person": "KOYEL GUPTA", "Grade": "N330", "Grade_Clean": "N330", "Customer_Name": "TULSIRAM HYDERABAD", "Customer_Type": "AGENT", "Complaint_Type": "PACKAGING", "Nature": "DAMAGE & SHORT RECEIPT", "Description": "1 BAG DAMAGED, 5 KG"}, {"Sr_No": 25, "FY": "FY2025-26", "Month": "Jul'25", "Month_Short": "JUL", "Month_Order": 4, "Sector": "DOMESTIC NON-RUBBER", "Region": "SOUTH", "Sales_Person": "KOYEL GUPTA", "Grade": "N330", "Grade_Clean": "N330", "Customer_Name": "TULSIRAM CHENNAI", "Customer_Type": "AGENT", "Complaint_Type": "PACKAGING", "Nature": "DAMAGE & SHORT RECEIPT", "Description": "25 KG SHORTAGE"}, {"Sr_No": 26, "FY": "FY2025-26", "Month": "Jul'25", "Month_Short": "JUL", "Month_Order": 4, "Sector": "DOMESTIC NON-RUBBER", "Region": "WEST", "Sales_Person": "KOYEL GUPTA", "Grade": "KC101", "Grade_Clean": "KC101", "Customer_Name": "SEVEN-11 INDUSTRIES", "Customer_Type": "DIRECT NON-TYRE", "Complaint_Type": "PACKAGING", "Nature": "DAMAGE & SHORT RECEIPT", "Description": "50 KG SHORTAGE"}, {"Sr_No": 27, "FY": "FY2025-26", "Month": "Jul'25", "Month_Short": "JUL", "Month_Order": 4, "Sector": "DOMESTIC RUBBER", "Region": "NORTH", "Sales_Person": "ANSHUMAN PARASHAR", "Grade": "N550 JB", "Grade_Clean": "N550", "Customer_Name": "BRIDGESTONE PUNE", "Customer_Type": "DIRECT TYRE", "Complaint_Type": "PACKAGING", "Nature": "PRINTING / MARKING ISSUE", "Description": "WH23 wrong code, no code in bag"}, {"Sr_No": 28, "FY": "FY2025-26", "Month": "Jul'25", "Month_Short": "JUL", "Month_Order": 4, "Sector": "DOMESTIC RUBBER", "Region": "WEST", "Sales_Person": "ANSHUMAN PARASHAR", "Grade": "N550 JB", "Grade_Clean": "N550", "Customer_Name": "CEAT BHANDUP", "Customer_Type": "DIRECT TYRE", "Complaint_Type": "QUALITY", "Nature": "WET / MOISTURE & LUMPS", "Description": "N550 lots of cake forming"}, {"Sr_No": 29, "FY": "FY2025-26", "Month": "Jul'25", "Month_Short": "JUL", "Month_Order": 4, "Sector": "DOMESTIC RUBBER", "Region": "WEST", "Sales_Person": "ANSHUMAN PARASHAR", "Grade": "N550 JB", "Grade_Clean": "N550", "Customer_Name": "CEAT BHANDUP", "Customer_Type": "DIRECT TYRE", "Complaint_Type": "QUALITY", "Nature": "WET / MOISTURE & LUMPS", "Description": "Mixer-6 bin N550 not released due to heavy moisture/caking"}, {"Sr_No": 30, "FY": "FY2025-26", "Month": "Jul'25", "Month_Short": "JUL", "Month_Order": 4, "Sector": "DOMESTIC RUBBER", "Region": "EAST", "Sales_Person": "SHUBHASISH ROY", "Grade": "N330", "Grade_Clean": "N330", "Customer_Name": "BIRLA TYRE (DALMIA BHARAT)", "Customer_Type": "DIRECT TYRE", "Complaint_Type": "QUALITY", "Nature": "CHEMICAL PROPERTIES", "Description": "Low Iodine adsorption value, entire load rejected"}, {"Sr_No": 31, "FY": "FY2025-26", "Month": "Jul'25", "Month_Short": "JUL", "Month_Order": 4, "Sector": "DOMESTIC RUBBER", "Region": "WEST", "Sales_Person": "ANSHUMAN PARASHAR", "Grade": "RG535 PB", "Grade_Clean": "RG535", "Customer_Name": "UNITED RUBBER", "Customer_Type": "DIRECT NON-TYRE", "Complaint_Type": "PACKAGING", "Nature": "PRINTING / MARKING ISSUE", "Description": "Plain bags with no grade printed - identity unknown"}, {"Sr_No": 32, "FY": "FY2025-26", "Month": "Aug'25", "Month_Short": "AUG", "Month_Order": 5, "Sector": "DOMESTIC RUBBER", "Region": "NORTH", "Sales_Person": "ANSHUMAN PARASHAR", "Grade": "RG223 JB", "Grade_Clean": "RG223", "Customer_Name": "ALP NISHIKAWA (LALRU)", "Customer_Type": "DIRECT NON-TYRE", "Complaint_Type": "TECHNICAL", "Nature": "OTHER", "Description": "Stain mark issue on Customer Vehicle"}, {"Sr_No": 33, "FY": "FY2025-26", "Month": "Aug'25", "Month_Short": "AUG", "Month_Order": 5, "Sector": "DOMESTIC RUBBER", "Region": "NORTH", "Sales_Person": "ANSHUMAN PARASHAR", "Grade": "RG223 JB", "Grade_Clean": "RG223", "Customer_Name": "ALP NISHIKAWA (LALRU)", "Customer_Type": "DIRECT NON-TYRE", "Complaint_Type": "QUALITY", "Nature": "WET / MOISTURE & LUMPS", "Description": "High moisture 0.6% to 6%"}, {"Sr_No": 34, "FY": "FY2025-26", "Month": "Aug'25", "Month_Short": "AUG", "Month_Order": 5, "Sector": "DOMESTIC RUBBER", "Region": "NORTH", "Sales_Person": "KOYEL GUPTA", "Grade": "Jetex205 PB", "Grade_Clean": "JETEX205", "Customer_Name": "AGROHA COLOURS PRIVATE LIMITED", "Customer_Type": "DIRECT NON-TYRE", "Complaint_Type": "QUALITY", "Nature": "WET / MOISTURE & LUMPS", "Description": "HIGH MOISTURE result 2.27%"}, {"Sr_No": 35, "FY": "FY2025-26", "Month": "Sep'25", "Month_Short": "SEP", "Month_Order": 6, "Sector": "DOMESTIC RUBBER", "Region": "SOUTH", "Sales_Person": "N V PANDIARAJAN", "Grade": "N220 JB", "Grade_Clean": "N220", "Customer_Name": "HSMI", "Customer_Type": "DIRECT NON-TYRE", "Complaint_Type": "PACKAGING", "Nature": "WET / MOISTURE & LUMPS", "Description": "Carbon lumps, moisture 47.73% vs spec 1.5%"}, {"Sr_No": 36, "FY": "FY2025-26", "Month": "Sep'25", "Month_Short": "SEP", "Month_Order": 6, "Sector": "DOMESTIC RUBBER", "Region": "SOUTH", "Sales_Person": "KOYEL GUPTA", "Grade": "N220 PB\nKC101 PB", "Grade_Clean": "KC101, N220", "Customer_Name": "PLASTIBLENDS INDIA", "Customer_Type": "DIRECT NON-TYRE", "Complaint_Type": "PACKAGING", "Nature": "DAMAGE & SHORT RECEIPT", "Description": "N220 - 6 bags torn; KC101 - 1 bag torn"}, {"Sr_No": 37, "FY": "FY2025-26", "Month": "Sep'25", "Month_Short": "SEP", "Month_Order": 6, "Sector": "DOMESTIC RUBBER", "Region": "SOUTH", "Sales_Person": "N V PANDIARAJAN", "Grade": "N326 PB", "Grade_Clean": "N326", "Customer_Name": "CLOFT INDIA", "Customer_Type": "DIRECT NON-TYRE", "Complaint_Type": "PACKAGING", "Nature": "FOREIGN PARTICLE / FM", "Description": "Metal piece (nail) detected in bag"}, {"Sr_No": 38, "FY": "FY2025-26", "Month": "Sep'25", "Month_Short": "SEP", "Month_Order": 6, "Sector": "DOMESTIC RUBBER", "Region": "SOUTH", "Sales_Person": "N V PANDIARAJAN", "Grade": "N774 JB", "Grade_Clean": "N774", "Customer_Name": "RIDDHI POLYMERS", "Customer_Type": "AGENT", "Complaint_Type": "LOGISTICS", "Nature": "WET / MOISTURE & LUMPS", "Description": "2 bags of N774 wet"}, {"Sr_No": 39, "FY": "FY2025-26", "Month": "Sep'25", "Month_Short": "SEP", "Month_Order": 6, "Sector": "DOMESTIC RUBBER", "Region": "NORTH", "Sales_Person": "ANSHUMAN PARASHAR", "Grade": "N550 JB", "Grade_Clean": "N550", "Customer_Name": "TOYODA GOSEI MINDA", "Customer_Type": "DIRECT NON-TYRE", "Complaint_Type": "QUALITY", "Nature": "WET / MOISTURE & LUMPS", "Description": "High moisture 5.32% at bottom, sticking issue in 2 batches"}, {"Sr_No": 40, "FY": "FY2025-26", "Month": "Sep'25", "Month_Short": "SEP", "Month_Order": 6, "Sector": "DOMESTIC NON-RUBBER", "Region": "SOUTH", "Sales_Person": "KOYEL GUPTA", "Grade": "JETEX145", "Grade_Clean": "JETEX145", "Customer_Name": "ASIAN PAINTS", "Customer_Type": "DIRECT NON-TYRE", "Complaint_Type": "PACKAGING", "Nature": "PRINTING / MARKING ISSUE", "Description": "Batch numbers not visible - customer refused"}, {"Sr_No": 41, "FY": "FY2025-26", "Month": "Oct'25", "Month_Short": "OCT", "Month_Order": 7, "Sector": "DOMESTIC RUBBER", "Region": "NORTH", "Sales_Person": "ANSHUMAN PARASHAR", "Grade": "N550 JB", "Grade_Clean": "N550", "Customer_Name": "BRIDGESTONE PUNE", "Customer_Type": "DIRECT TYRE", "Complaint_Type": "LOGISTICS", "Nature": "WET / MOISTURE & LUMPS", "Description": "Load rejected - wet condition"}, {"Sr_No": 42, "FY": "FY2025-26", "Month": "Oct'25", "Month_Short": "OCT", "Month_Order": 7, "Sector": "EXPORT", "Region": "EXPORT", "Sales_Person": "RAVI SHARMA", "Grade": "N339", "Grade_Clean": "N339", "Customer_Name": "HB CHEMICAL", "Customer_Type": null, "Complaint_Type": "PACKAGING", "Nature": "PRINTING / MARKING ISSUE", "Description": "Dispatched as N339 but found N220 inside bag"}, {"Sr_No": 43, "FY": "FY2025-26", "Month": "Oct'25", "Month_Short": "OCT", "Month_Order": 7, "Sector": "DOMESTIC NON-RUBBER", "Region": "WEST", "Sales_Person": "KOYEL GUPTA", "Grade": "JETEX105", "Grade_Clean": "JETEX105", "Customer_Name": "SUMIRAN MASTERBATCH PVT LTD", "Customer_Type": "DIRECT NON-TYRE", "Complaint_Type": "PACKAGING", "Nature": "DAMAGE & SHORT RECEIPT", "Description": "02 BAG SHORT 50KG"}, {"Sr_No": 44, "FY": "FY2025-26", "Month": "Oct'25", "Month_Short": "OCT", "Month_Order": 7, "Sector": "DOMESTIC NON-RUBBER", "Region": "WEST", "Sales_Person": "KOYEL GUPTA", "Grade": "KC101", "Grade_Clean": "KC101", "Customer_Name": "HUBERGROUP INDIA PRIVATE LIMITED", "Customer_Type": "DIRECT NON-TYRE", "Complaint_Type": "PACKAGING", "Nature": "DAMAGE & SHORT RECEIPT", "Description": "01 BAG SHORT 25KG"}, {"Sr_No": 45, "FY": "FY2025-26", "Month": "Oct'25", "Month_Short": "OCT", "Month_Order": 7, "Sector": "DOMESTIC RUBBER", "Region": "NORTH", "Sales_Person": "ANSHUMAN PARASHAR", "Grade": "N550 JB", "Grade_Clean": "N550", "Customer_Name": "KM IMPEX", "Customer_Type": "DIRECT NON-TYRE", "Complaint_Type": "QUALITY", "Nature": "WET / MOISTURE & LUMPS", "Description": "N550 lumps in 500kg JB"}, {"Sr_No": 46, "FY": "FY2025-26", "Month": "Oct'25", "Month_Short": "OCT", "Month_Order": 7, "Sector": "DOMESTIC RUBBER", "Region": "SOUTH", "Sales_Person": "N V PANDIARAJAN", "Grade": "N550 JB", "Grade_Clean": "N550", "Customer_Name": "MOTHERSON", "Customer_Type": "DIRECT NON-TYRE", "Complaint_Type": "PACKAGING", "Nature": "WET / MOISTURE & LUMPS", "Description": "Water dripping from bottom of bag"}, {"Sr_No": 47, "FY": "FY2025-26", "Month": "Oct'25", "Month_Short": "OCT", "Month_Order": 7, "Sector": "EXPORT", "Region": "EXPORT", "Sales_Person": "NIVEDITA ROY", "Grade": "RG223 JB", "Grade_Clean": "RG223", "Customer_Name": "W&S", "Customer_Type": "AGENT", "Complaint_Type": "QUALITY", "Nature": "PRINTING / MARKING ISSUE", "Description": "Spain specs shipped to Rotterdam"}, {"Sr_No": 48, "FY": "FY2025-26", "Month": "Oct'25", "Month_Short": "OCT", "Month_Order": 7, "Sector": "DOMESTIC RUBBER", "Region": "NORTH", "Sales_Person": "ANSHUMAN PARASHAR", "Grade": "N339 PB", "Grade_Clean": "N339", "Customer_Name": "HSMU RUBBER", "Customer_Type": "DIRECT NON-TYRE", "Complaint_Type": "PACKAGING", "Nature": "PRINTING / MARKING ISSUE", "Description": "N220/N330 inner bag, N339 outer - hardness variation"}, {"Sr_No": 49, "FY": "FY2025-26", "Month": "Nov'25", "Month_Short": "NOV", "Month_Order": 8, "Sector": "DOMESTIC NON-RUBBER", "Region": "NORTH", "Sales_Person": "KOYEL GUPTA", "Grade": "N330", "Grade_Clean": "N330", "Customer_Name": "BHARAT SOLVENT", "Customer_Type": "AGENT", "Complaint_Type": "PACKAGING", "Nature": "DAMAGE & SHORT RECEIPT", "Description": "12 KG SHORTAGE"}, {"Sr_No": 50, "FY": "FY2025-26", "Month": "Nov'25", "Month_Short": "NOV", "Month_Order": 8, "Sector": "DOMESTIC RUBBER", "Region": "NORTH", "Sales_Person": "ANSHUMAN PARASHAR", "Grade": "N220", "Grade_Clean": "N220", "Customer_Name": "CEAT BHANDUP", "Customer_Type": "DIRECT TYRE", "Complaint_Type": "LOGISTICS", "Nature": "OTHER", "Description": "Driver found carrying liquor in truck during plant check-in"}, {"Sr_No": 51, "FY": "FY2025-26", "Month": "NOV'25", "Month_Short": "NOV", "Month_Order": 8, "Sector": "DOMESTIC NON-RUBBER", "Region": "WEST", "Sales_Person": "KOYEL GUPTA", "Grade": "KC120", "Grade_Clean": "KC120", "Customer_Name": "PLASTIBLENDS INDIA", "Customer_Type": "DIRECT NON-TYRE", "Complaint_Type": "PACKAGING", "Nature": "DAMAGE & SHORT RECEIPT", "Description": "4 BAGS DAMAGE & 50 KG SHORT"}, {"Sr_No": 52, "FY": "FY2025-26", "Month": "NOV'25", "Month_Short": "NOV", "Month_Order": 8, "Sector": "DOMESTIC RUBBER", "Region": "WEST", "Sales_Person": "ANSHUMAN PARASHAR", "Grade": "N550", "Grade_Clean": "N550", "Customer_Name": "CEAT BHANDUP", "Customer_Type": "DIRECT TYRE", "Complaint_Type": "QUALITY", "Nature": "WET / MOISTURE & LUMPS", "Description": "N550 cake formation in Bhandup plant - production loss"}, {"Sr_No": 53, "FY": "FY2025-26", "Month": "Dec'25", "Month_Short": "DEC", "Month_Order": 9, "Sector": "DOMESTIC RUBBER", "Region": "NORTH", "Sales_Person": "ANSHUMAN PARASHAR", "Grade": "RG223 JB", "Grade_Clean": "RG223", "Customer_Name": "ALP NISHIKAWA (LALRU)", "Customer_Type": "DIRECT NON-TYRE", "Complaint_Type": "TECHNICAL", "Nature": "DISPERSION / SURFACE ISSUE", "Description": "Problem in Sponge and Solid Compound"}, {"Sr_No": 54, "FY": "FY2025-26", "Month": "Dec'25", "Month_Short": "DEC", "Month_Order": 9, "Sector": "DOMESTIC RUBBER", "Region": "EAST", "Sales_Person": "SHUBHASISH ROY", "Grade": "N774", "Grade_Clean": "N774", "Customer_Name": "VISHVA VISHAL REFRACTORY LIMITED", "Customer_Type": "DIRECT NON-TYRE", "Complaint_Type": "PACKAGING", "Nature": "DAMAGE & SHORT RECEIPT", "Description": "Some bags torn/damaged in 15MT consignment"}, {"Sr_No": 55, "FY": "FY2025-26", "Month": "Dec'25", "Month_Short": "DEC", "Month_Order": 9, "Sector": "DOMESTIC RUBBER", "Region": "SOUTH", "Sales_Person": "N V PANDIARAJAN", "Grade": "RG535", "Grade_Clean": "RG535", "Customer_Name": "POLYHOSE INDIA", "Customer_Type": "DIRECT NON-TYRE", "Complaint_Type": "QUALITY", "Nature": "WET / MOISTURE & LUMPS", "Description": "Polyhose-Chennai observed lumps in RG535"}, {"Sr_No": 56, "FY": "FY2025-26", "Month": "Dec'25", "Month_Short": "DEC", "Month_Order": 9, "Sector": "DOMESTIC RUBBER", "Region": "NORTH", "Sales_Person": "ANSHUMAN PARASHAR", "Grade": "N550 JB", "Grade_Clean": "N550", "Customer_Name": "TOYODA GOSEI MINDA", "Customer_Type": "DIRECT NON-TYRE", "Complaint_Type": "TECHNICAL", "Nature": "MIXING / COMPOUND ISSUE", "Description": "Oil adjustment issue in compound mixing"}, {"Sr_No": 57, "FY": "FY2025-26", "Month": "Dec'25", "Month_Short": "DEC", "Month_Order": 9, "Sector": "DOMESTIC RUBBER", "Region": "SOUTH", "Sales_Person": "N V PANDIARAJAN", "Grade": "N550 JB", "Grade_Clean": "N550", "Customer_Name": "MOTHERSON", "Customer_Type": "DIRECT NON-TYRE", "Complaint_Type": "TECHNICAL", "Nature": "VISCOSITY / RHEOLOGY", "Description": "MV variation vs spec 36-50MU, observed 42.8-80.1MU"}, {"Sr_No": 58, "FY": "FY2025-26", "Month": "Dec'25", "Month_Short": "DEC", "Month_Order": 9, "Sector": "DOMESTIC RUBBER", "Region": "WEST", "Sales_Person": "ANSHUMAN PARASHAR", "Grade": "RG223 JB", "Grade_Clean": "RG223", "Customer_Name": "ALP NISHIKAWA (SANAND)", "Customer_Type": "DIRECT NON-TYRE", "Complaint_Type": "TECHNICAL", "Nature": "DISPERSION / SURFACE ISSUE", "Description": "Poor surface finish"}, {"Sr_No": 59, "FY": "FY2025-26", "Month": "Jan'26", "Month_Short": "JAN", "Month_Order": 10, "Sector": "EXPORT", "Region": "EXPORT", "Sales_Person": "RAVI SHARMA", "Grade": "N220 JB (500 Kg.)", "Grade_Clean": "N220", "Customer_Name": "HORIZON ADDIS TYRE", "Customer_Type": "DIRECT TYRE", "Complaint_Type": "PACKAGING", "Nature": "OTHER", "Description": "Bag burnt - temp >115°C inside jumbo bags"}, {"Sr_No": 60, "FY": "FY2025-26", "Month": "Jan'26", "Month_Short": "JAN", "Month_Order": 10, "Sector": "EXPORT", "Region": "EXPORT", "Sales_Person": "NIVEDITA ROY", "Grade": "RG223 JB", "Grade_Clean": "RG223", "Customer_Name": "W&S (HUTCHINSON)", "Customer_Type": "DIRECT NON-TYRE", "Complaint_Type": "TECHNICAL", "Nature": "VISCOSITY / RHEOLOGY", "Description": "Variation viscosity (low MV)"}, {"Sr_No": 61, "FY": "FY2025-26", "Month": "Jan'26", "Month_Short": "JAN", "Month_Order": 10, "Sector": "DOMESTIC RUBBER", "Region": "WEST", "Sales_Person": "ANSHUMAN PARASHAR", "Grade": "N220 JB", "Grade_Clean": "N220", "Customer_Name": "CEAT BHANDUP", "Customer_Type": "DIRECT TYRE", "Complaint_Type": "LOGISTICS", "Nature": "DAMAGE & SHORT RECEIPT", "Description": "One N220 JB in damaged condition"}, {"Sr_No": 62, "FY": "FY2025-26", "Month": "JAN'26", "Month_Short": "JAN", "Month_Order": 10, "Sector": "DOMESTIC NON-RUBBER", "Region": "WEST", "Sales_Person": "KOYEL GUPTA", "Grade": "KP202 PB", "Grade_Clean": "KP202", "Customer_Name": "PLASTIBLENDS INDIA", "Customer_Type": "DIRECT NON-TYRE", "Complaint_Type": "PACKAGING", "Nature": "DAMAGE & SHORT RECEIPT", "Description": "1 BAG DAMAGE 25KG"}, {"Sr_No": 63, "FY": "FY2025-26", "Month": "JAN'26", "Month_Short": "JAN", "Month_Order": 10, "Sector": "DOMESTIC NON-RUBBER", "Region": "WEST", "Sales_Person": "KOYEL GUPTA", "Grade": "KP202 PB", "Grade_Clean": "KP202", "Customer_Name": "PLASTIBLENDS INDIA", "Customer_Type": "DIRECT NON-TYRE", "Complaint_Type": "PACKAGING", "Nature": "DAMAGE & SHORT RECEIPT", "Description": "1 BAG DAMAGE 25KG"}, {"Sr_No": 64, "FY": "FY2025-26", "Month": "JAN'26", "Month_Short": "JAN", "Month_Order": 10, "Sector": "DOMESTIC RUBBER", "Region": "WEST", "Sales_Person": "ANSHUMAN PARASHAR", "Grade": "N550 PB", "Grade_Clean": "N550", "Customer_Name": "ROHIT RUBBER", "Customer_Type": "AGENT", "Complaint_Type": "QUALITY", "Nature": "FOREIGN PARTICLE / FM", "Description": "Foreign particles in N550 from Rohit Rubber's warehouse"}, {"Sr_No": 65, "FY": "FY2025-26", "Month": "FEB'26", "Month_Short": "FEB", "Month_Order": 11, "Sector": "EXPORT", "Region": "EXPORT", "Sales_Person": "RAVI SHARMA", "Grade": "N339 JB", "Grade_Clean": "N339", "Customer_Name": "CONTINENTAL", "Customer_Type": "DIRECT TYRE", "Complaint_Type": "PACKAGING", "Nature": "WET / MOISTURE & LUMPS", "Description": "IAN test failed, carbon found wet"}, {"Sr_No": 66, "FY": "FY2025-26", "Month": "FEB'26", "Month_Short": "FEB", "Month_Order": 11, "Sector": "EXPORT", "Region": "EXPORT", "Sales_Person": "NIVEDITA ROY", "Grade": "N550 JB", "Grade_Clean": "N550", "Customer_Name": "BRISA", "Customer_Type": "DIRECT TYRE", "Complaint_Type": "TECHNICAL", "Nature": "VISCOSITY / RHEOLOGY", "Description": "Off-spec MV, tensile properties and curing curve MH"}, {"Sr_No": 67, "FY": "FY2025-26", "Month": "MAR'26", "Month_Short": "MAR", "Month_Order": 12, "Sector": "DOMESTIC RUBBER", "Region": "WEST", "Sales_Person": "ANSHUMAN PARASHAR", "Grade": "N660 PB", "Grade_Clean": "N660", "Customer_Name": "ARMACELL", "Customer_Type": "DIRECT TYRE", "Complaint_Type": "QUALITY", "Nature": "DISPERSION / SURFACE ISSUE", "Description": "Harder pellets in N660 causing dispersion issue"}, {"Sr_No": 68, "FY": "FY2025-26", "Month": "MAR'26", "Month_Short": "MAR", "Month_Order": 12, "Sector": "DOMESTIC RUBBER", "Region": "WEST", "Sales_Person": "ANSHUMAN PARASHAR", "Grade": "N660 JB", "Grade_Clean": "N660", "Customer_Name": "CEAT BHANDUP", "Customer_Type": "DIRECT TYRE", "Complaint_Type": "PACKAGING", "Nature": "PRINTING / MARKING ISSUE", "Description": "N660 JB with wrong identification - N220 sticker"}, {"Sr_No": 69, "FY": "FY2025-26", "Month": "MAR'26", "Month_Short": "MAR", "Month_Order": 12, "Sector": "EXPORT", "Region": "EXPORT", "Sales_Person": "NIVEDITA ROY", "Grade": "N330 JB", "Grade_Clean": "N330", "Customer_Name": "W&S (EMAC)", "Customer_Type": "DIRECT NON-TYRE", "Complaint_Type": "QUALITY", "Nature": "WET / MOISTURE & LUMPS", "Description": "High moisture content confirmed by customer"}, {"Sr_No": 70, "FY": "FY2025-26", "Month": "MAR'26", "Month_Short": "MAR", "Month_Order": 12, "Sector": "EXPORT", "Region": "EXPORT", "Sales_Person": "NIVEDITA ROY", "Grade": "RG223 JB", "Grade_Clean": "RG223", "Customer_Name": "W&S (CARBODY)", "Customer_Type": "DIRECT NON-TYRE", "Complaint_Type": "TECHNICAL", "Nature": "VISCOSITY / RHEOLOGY", "Description": "Lower viscosity in Lot 36746/010"}, {"Sr_No": 71, "FY": "FY2025-26", "Month": "MAR'26", "Month_Short": "MAR", "Month_Order": 12, "Sector": "EXPORT", "Region": "EXPORT", "Sales_Person": "NIVEDITA ROY", "Grade": "RG225 JB", "Grade_Clean": "RG225", "Customer_Name": "FLEVO", "Customer_Type": "DIRECT NON-TYRE", "Complaint_Type": "QUALITY", "Nature": "CHEMICAL PROPERTIES", "Description": "Flowability issue discharging from JB to silo"}, {"Sr_No": 72, "FY": "FY2025-26", "Month": "MAR'26", "Month_Short": "MAR", "Month_Order": 12, "Sector": "EXPORT", "Region": "EXPORT", "Sales_Person": "NIVEDITA ROY", "Grade": "RG535 JB", "Grade_Clean": "RG535", "Customer_Name": "W&S (HEXPOL UNICA)", "Customer_Type": "DIRECT NON-TYRE", "Complaint_Type": "TECHNICAL", "Nature": "CHEMICAL PROPERTIES", "Description": "Several issues in compounds related to mixing performance"}, {"Sr_No": 73, "FY": "FY2025-26", "Month": "MAR'26", "Month_Short": "MAR", "Month_Order": 12, "Sector": "EXPORT", "Region": "EXPORT", "Sales_Person": "NIVEDITA ROY", "Grade": "RG223 JB", "Grade_Clean": "RG223", "Customer_Name": "CIKAUTXO", "Customer_Type": "DIRECT NON-TYRE", "Complaint_Type": "TECHNICAL", "Nature": "CHEMICAL PROPERTIES", "Description": "Mixing performance issues"}, {"Sr_No": 74, "FY": "FY2025-26", "Month": "MAR'26", "Month_Short": "MAR", "Month_Order": 12, "Sector": "DOMESTIC NON-RUBBER", "Region": "EAST", "Sales_Person": "SHUBHASISH ROY", "Grade": "N330 JB", "Grade_Clean": "N330", "Customer_Name": "KRISHNA BELTS", "Customer_Type": "DIRECT NON-TYRE", "Complaint_Type": "QUALITY", "Nature": "CHEMICAL PROPERTIES", "Description": "4 JBs in powdered form, low pour density"}, {"Sr_No": 75, "FY": "FY2025-26", "Month": "MAR'26", "Month_Short": "MAR", "Month_Order": 12, "Sector": "DOMESTIC NON-RUBBER", "Region": "WEST", "Sales_Person": "NIKHIL NITANAWRE", "Grade": "N220 PB", "Grade_Clean": "N220", "Customer_Name": "SATYENDRA MB", "Customer_Type": "DIRECT NON-TYRE", "Complaint_Type": "TECHNICAL", "Nature": "CHEMICAL PROPERTIES", "Description": "Poor processibility, mesh choke in 15 min, poor dispersion"}, {"Sr_No": 76, "FY": "FY2025-26", "Month": "MAR'26", "Month_Short": "MAR", "Month_Order": 12, "Sector": "EXPORT", "Region": "EXPORT", "Sales_Person": "BRAD D DONAT", "Grade": "RG223 JB", "Grade_Clean": "RG223", "Customer_Name": "COOPER STANDARD", "Customer_Type": "DIRECT NON-TYRE", "Complaint_Type": "TECHNICAL", "Nature": "VISCOSITY / RHEOLOGY", "Description": "Huge rheology variation on RG223 compounds"}];
+
+const MONTHS_ORDER = ['APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC','JAN','FEB','MAR'];
+let charts = {};
+
+// Populate filters
+function populateFilters(data) {
+  const vals = (key, arr) => [...new Set(arr.map(d=>d[key]).filter(v=>v&&v!='null'&&v!='nan'))].sort();
+  const sel = (id, items) => {
+    const el = document.getElementById(id);
+    items.forEach(v => { const o = document.createElement('option'); o.value=v; o.textContent=v; el.appendChild(o); });
+  };
+  sel('f-month', MONTHS_ORDER.filter(m => vals('Month_Short',data).includes(m)));
+  sel('f-region', vals('Region',data));
+  sel('f-sector', vals('Sector',data));
+  sel('f-grade', vals('Grade_Clean',data).filter(g=>!g.includes(',')));
+  sel('f-type', vals('Complaint_Type',data));
+  sel('f-nature', vals('Nature',data));
+  sel('f-customer', vals('Customer_Name',data));
+}
+
+function getFiltered() {
+  const fy = document.getElementById('f-fy').value;
+  const mo = document.getElementById('f-month').value;
+  const re = document.getElementById('f-region').value;
+  const se = document.getElementById('f-sector').value;
+  const gr = document.getElementById('f-grade').value;
+  const ty = document.getElementById('f-type').value;
+  const na = document.getElementById('f-nature').value;
+  const cu = document.getElementById('f-customer').value;
+  return RAW.filter(d => {
+    if (fy !== 'ALL' && d.FY !== fy) return false;
+    if (mo !== 'ALL' && d.Month_Short !== mo) return false;
+    if (re !== 'ALL' && d.Region !== re) return false;
+    if (se !== 'ALL' && d.Sector !== se) return false;
+    if (gr !== 'ALL' && (!d.Grade_Clean || !d.Grade_Clean.includes(gr))) return false;
+    if (ty !== 'ALL' && d.Complaint_Type !== ty) return false;
+    if (na !== 'ALL' && d.Nature !== na) return false;
+    if (cu !== 'ALL' && d.Customer_Name !== cu) return false;
+    return true;
+  });
+}
+
+function resetFilters() {
+  ['f-fy','f-month','f-region','f-sector','f-grade','f-type','f-nature','f-customer'].forEach(id => document.getElementById(id).value='ALL');
+  render();
+}
+
+function count(arr, key) {
+  const m = {};
+  arr.forEach(d => { const v = d[key]||'(Unknown)'; m[v] = (m[v]||0)+1; });
+  return m;
+}
+
+function topN(obj, n) {
+  return Object.entries(obj).sort((a,b)=>b[1]-a[1]).slice(0,n);
+}
+
+function makeChart(id, type, data, options={}) {
+  const ctx = document.getElementById(id);
+  if (!ctx) return;
+  if (charts[id]) charts[id].destroy();
+  charts[id] = new Chart(ctx, { type, data, options: { responsive:true, maintainAspectRatio:false, ...options } });
+}
+
+const COLORS = ['#58a6ff','#f0883e','#3fb950','#d2a8ff','#ff7b72','#e3b341','#79c0ff','#ffa657','#56d364','#bc8cff'];
+const FY1C = '#58a6ff', FY2C = '#f0883e';
+
+function render() {
+  const css = getComputedStyle(document.documentElement);
+  const TEXT_MUTED = css.getPropertyValue('--text-muted').trim() || TEXT_MUTED;
+  const GRID = css.getPropertyValue('--grid').trim() || GRID;
+  const CHART_BORDER = css.getPropertyValue('--chart-border').trim() || CHART_BORDER;
+  const data = getFiltered();
+  const fy1 = data.filter(d=>d.FY==='FY2024-25');
+  const fy2 = data.filter(d=>d.FY==='FY2025-26');
+
+  // KPI
+  document.getElementById('kpi-fy1').textContent = fy1.length;
+  document.getElementById('kpi-fy2').textContent = fy2.length;
+  const chg = fy1.length>0 ? Math.round((fy2.length-fy1.length)/fy1.length*100) : 0;
+  const kpiChg = document.getElementById('kpi-change');
+  kpiChg.textContent = (chg>=0?'+':'')+chg+'%';
+  kpiChg.className = 'kpi-val ' + (chg<0?'down':'up');
+  document.getElementById('kpi-change-sub').textContent = 'FY25-26 vs FY24-25 ' + (fy1.length&&fy2.length?`(${fy1.length}→${fy2.length})`:'');
+
+  const typeCnt = count(data,'Complaint_Type');
+  const topType = topN(typeCnt,1)[0];
+  const fyFilterVal = document.getElementById('f-fy').value;
+  const fyLabel = fyFilterVal === 'ALL' ? '(both FY combined)' : `(${fyFilterVal})`;
+  if(topType){ document.getElementById('kpi-top-type').textContent=topType[0]; document.getElementById('kpi-top-type-sub').textContent=topType[1]+' complaints '+fyLabel; }
+  const custCnt = count(data,'Customer_Name');
+  const topCust = topN(custCnt,1)[0];
+  if(topCust){ document.getElementById('kpi-repeat').textContent=topCust[0]; document.getElementById('kpi-repeat-sub').textContent=topCust[1]+' complaints '+fyLabel; }
+
+  // Monthly trend
+  const mData1={}, mData2={};
+  fy1.forEach(d=>{mData1[d.Month_Short]=(mData1[d.Month_Short]||0)+1;});
+  fy2.forEach(d=>{mData2[d.Month_Short]=(mData2[d.Month_Short]||0)+1;});
+  makeChart('chartMonthly','line',{
+    labels: MONTHS_ORDER,
+    datasets:[
+      {label:'FY2024-25',data:MONTHS_ORDER.map(m=>mData1[m]||0),borderColor:FY1C,backgroundColor:'rgba(88,166,255,0.1)',tension:.4,pointRadius:4,fill:true},
+      {label:'FY2025-26',data:MONTHS_ORDER.map(m=>mData2[m]||0),borderColor:FY2C,backgroundColor:'rgba(240,136,62,0.1)',tension:.4,pointRadius:4,fill:true}
+    ]
+  },{plugins:{legend:{labels:{color:TEXT_MUTED,boxWidth:12}}},scales:{x:{ticks:{color:TEXT_MUTED},grid:{color:GRID}},y:{ticks:{color:TEXT_MUTED},grid:{color:GRID},beginAtZero:true}}});
+
+  // Type bar
+  const types = ['PACKAGING','QUALITY','TECHNICAL','LOGISTICS'];
+  const t1 = types.map(t=>fy1.filter(d=>d.Complaint_Type===t).length);
+  const t2 = types.map(t=>fy2.filter(d=>d.Complaint_Type===t).length);
+  makeChart('chartTypeBar','bar',{
+    labels:types,
+    datasets:[
+      {label:'FY2024-25',data:t1,backgroundColor:'rgba(88,166,255,0.7)',borderColor:FY1C,borderWidth:1},
+      {label:'FY2025-26',data:t2,backgroundColor:'rgba(240,136,62,0.7)',borderColor:FY2C,borderWidth:1}
+    ]
+  },{plugins:{legend:{labels:{color:TEXT_MUTED,boxWidth:12}}},scales:{x:{ticks:{color:TEXT_MUTED},grid:{color:GRID}},y:{ticks:{color:TEXT_MUTED},grid:{color:GRID},beginAtZero:true}}});
+
+  // Region
+  const regData = count(data,'Region');
+  const regTop = topN(regData,5);
+  makeChart('chartRegion','doughnut',{
+    labels:regTop.map(r=>r[0]),
+    datasets:[{data:regTop.map(r=>r[1]),backgroundColor:COLORS,borderWidth:1,borderColor:CHART_BORDER}]
+  },{plugins:{legend:{position:'bottom',labels:{color:TEXT_MUTED,boxWidth:10,font:{size:11}}}}});
+
+  // Grade
+  const allGrades = {};
+  data.forEach(d => {
+    if(!d.Grade_Clean) return;
+    d.Grade_Clean.split(',').forEach(g => {
+      g = g.trim();
+      if(g) allGrades[g] = (allGrades[g]||0)+1;
+    });
+  });
+  const grTop = topN(allGrades,10);
+  makeChart('chartGrade','bar',{
+    labels:grTop.map(g=>g[0]),
+    datasets:[{data:grTop.map(g=>g[1]),backgroundColor:COLORS,borderWidth:0}]
+  },{indexAxis:'y',plugins:{legend:{display:false}},scales:{x:{ticks:{color:TEXT_MUTED},grid:{color:GRID},beginAtZero:true},y:{ticks:{color:TEXT_MUTED,font:{size:11}},grid:{display:false}}}});
+
+  // Sector
+  const secData = count(data,'Sector');
+  const secTop = topN(secData,5);
+  makeChart('chartSector','pie',{
+    labels:secTop.map(s=>s[0]),
+    datasets:[{data:secTop.map(s=>s[1]),backgroundColor:COLORS,borderWidth:1,borderColor:CHART_BORDER}]
+  },{plugins:{legend:{position:'bottom',labels:{color:TEXT_MUTED,boxWidth:10,font:{size:10}}}}});
+
+  // Sales person
+  const spAll = [...new Set(data.map(d=>d.Sales_Person).filter(Boolean))].sort();
+  const sp1 = spAll.map(sp=>fy1.filter(d=>d.Sales_Person===sp).length);
+  const sp2 = spAll.map(sp=>fy2.filter(d=>d.Sales_Person===sp).length);
+  makeChart('chartSP','bar',{
+    labels:spAll.map(s=>s.split(' ').map(w=>w[0]+w.slice(1).toLowerCase()).join(' ')),
+    datasets:[
+      {label:'FY2024-25',data:sp1,backgroundColor:'rgba(88,166,255,0.7)',borderColor:FY1C,borderWidth:1},
+      {label:'FY2025-26',data:sp2,backgroundColor:'rgba(240,136,62,0.7)',borderColor:FY2C,borderWidth:1}
+    ]
+  },{plugins:{legend:{labels:{color:TEXT_MUTED,boxWidth:12}}},scales:{x:{ticks:{color:TEXT_MUTED,font:{size:10}},grid:{color:GRID}},y:{ticks:{color:TEXT_MUTED},grid:{color:GRID},beginAtZero:true}}});
+
+  // Nature (top 12)
+  const natData = count(data,'Nature');
+  const natTop = topN(natData,12);
+  const natChartTitle = fyFilterVal === 'ALL' ? 'Top 12 Complaint Natures <small>both FY combined</small>' : `Top 12 Complaint Natures <small>${fyFilterVal}</small>`;
+  document.querySelector('#chartNature').closest('.chart-card').querySelector('.chart-title').innerHTML = natChartTitle;
+  makeChart('chartNature','bar',{
+    labels:natTop.map(n=>n[0]),
+    datasets:[{data:natTop.map(n=>n[1]),backgroundColor:COLORS.map(c=>c+'bb'),borderColor:COLORS,borderWidth:1}]
+  },{indexAxis:'y',plugins:{legend:{display:false}},scales:{x:{ticks:{color:TEXT_MUTED},grid:{color:GRID},beginAtZero:true},y:{ticks:{color:TEXT_MUTED,font:{size:10}},grid:{display:false}}}});
+
+  // Nature YoY change
+  const nat1 = count(fy1,'Nature');
+  const nat2 = count(fy2,'Nature');
+  const allNat = [...new Set([...Object.keys(nat1),...Object.keys(nat2)])].filter(n=>n&&n!='null');
+  const natChanges = allNat.map(n => ({n, c1:nat1[n]||0, c2:nat2[n]||0, delta:(nat2[n]||0)-(nat1[n]||0)}));
+  natChanges.sort((a,b)=>Math.abs(b.delta)-Math.abs(a.delta));
+  const top15 = natChanges.slice(0,15);
+  makeChart('chartNatureChange','bar',{
+    labels:top15.map(n=>n.n),
+    datasets:[{
+      data:top15.map(n=>n.delta),
+      backgroundColor:top15.map(n=>n.delta>0?'rgba(255,123,114,0.7)':'rgba(63,185,80,0.7)'),
+      borderColor:top15.map(n=>n.delta>0?'#ff7b72':'#3fb950'),
+      borderWidth:1
+    }]
+  },{plugins:{legend:{display:false}},scales:{x:{ticks:{color:TEXT_MUTED,font:{size:10}},grid:{color:GRID}},y:{ticks:{color:TEXT_MUTED},grid:{color:GRID},beginAtZero:false}},
+  annotation:{annotations:[{type:'line',yMin:0,yMax:0,borderColor:'rgba(255,255,255,0.2)',borderWidth:1}]}});
+
+  // Insights
+  const packaging = data.filter(d=>d.Complaint_Type==='PACKAGING').length;
+  const quality = data.filter(d=>d.Complaint_Type==='QUALITY').length;
+  const pkgPct = data.length>0?Math.round(packaging/data.length*100):0;
+  const petroRepeat = data.filter(d=>d.Customer_Name==='PETROTECH CHEMICA').length;
+  const ceatRepeat = data.filter(d=>d.Customer_Name==='CEAT BHANDUP').length;
+  const dampageNature = data.filter(d=>d.Nature==='DAMAGE & SHORT RECEIPT').length;
+  const moistureTotal = data.filter(d=>d.Nature&&d.Nature.includes('MOISTURE')||d.Nature&&d.Nature.includes('WET')).length;
+  const insightsEl = document.getElementById('insights-row');
+  const fyCtx = fyFilterVal === 'ALL' ? 'both FY combined' : fyFilterVal;
+  insightsEl.innerHTML = `
+    <div class="insight-card warn">
+      <div class="insight-icon">⚠️</div>
+      <div class="insight-title">Packaging Dominant</div>
+      <div class="insight-body">${pkgPct}% of all complaints are Packaging-related (${packaging}/${data.length}). Damage &amp; Short Receipt alone accounts for ${dampageNature} complaints — largest single issue category.</div>
+    </div>
+    <div class="insight-card warn">
+      <div class="insight-icon">🔁</div>
+      <div class="insight-title">Chronic Repeat Customers</div>
+      <div class="insight-body">PETROTECH CHEMICA raised ${petroRepeat} complaints (${fyCtx}). CEAT BHANDUP raised ${ceatRepeat}. These two customers alone account for ${Math.round((petroRepeat+ceatRepeat)/data.length*100)||0}% of total volume.</div>
+    </div>
+    <div class="insight-card info">
+      <div class="insight-icon">💧</div>
+      <div class="insight-title">Moisture / Wet Issues</div>
+      <div class="insight-body">${moistureTotal} complaints linked to moisture or wet bags (${fyCtx}). High Moisture complaints increased in FY2025-26, driven by N550 and RG223 grades particularly during monsoon months.</div>
+    </div>
+  `;
+
+  // Repeat customers
+  const custAll = count(data,'Customer_Name');
+  const custTop = topN(custAll,8);
+  const custFY1 = count(fy1,'Customer_Name');
+  const custFY2 = count(fy2,'Customer_Name');
+  document.getElementById('repeat-customers').innerHTML = custTop.map(([name,total])=>`
+    <div class="repeat-item">
+      <div>
+        <div class="repeat-name">${name}</div>
+        <div class="repeat-meta">
+          <span class="fy-tag fy1-tag">FY24-25: ${custFY1[name]||0}</span>&nbsp;
+          <span class="fy-tag fy2-tag">FY25-26: ${custFY2[name]||0}</span>
+        </div>
+      </div>
+      <div class="repeat-count">
+        <div class="repeat-num">${total}</div>
+        <div class="repeat-fy">total</div>
+      </div>
+    </div>
+  `).join('');
+
+  // Grade-Customer pairs
+  const pairs = {};
+  data.forEach(d => {
+    if(!d.Grade_Clean||!d.Customer_Name) return;
+    d.Grade_Clean.split(',').forEach(g => {
+      const key = `${g.trim()} × ${d.Customer_Name}`;
+      pairs[key] = (pairs[key]||0)+1;
+    });
+  });
+  const pairsTop = topN(pairs,8).filter(p=>p[1]>1);
+  document.getElementById('repeat-pairs').innerHTML = pairsTop.map(([pair,cnt])=>{
+    const [grade,cust] = pair.split(' × ');
+    const lvl = cnt>=5?'r-high':cnt>=3?'r-med':'r-low';
+    return `<div class="repeat-item">
+      <div>
+        <div class="repeat-name">${cust}</div>
+        <div class="repeat-meta" style="color:var(--accent2)">${grade}</div>
+      </div>
+      <div class="repeat-count">
+        <div class="repeat-num"><span class="repeat-badge ${lvl}">${cnt}x</span></div>
+      </div>
+    </div>`;
+  }).join('') || '<div style="color:var(--text-muted);padding:10px;font-size:12px">No repeat pairs in current filter</div>';
+
+  // Table
+  const label = document.getElementById('table-count-label');
+  label.textContent = `— ${data.length} records`;
+  const tbody = document.getElementById('detail-table');
+  tbody.innerHTML = data.map((d,i)=>`
+    <tr>
+      <td style="color:var(--text-muted)">${i+1}</td>
+      <td><span class="fy-tag ${d.FY==='FY2024-25'?'fy1-tag':'fy2-tag'}">${d.FY.replace('FY','')}</span></td>
+      <td style="font-family:'IBM Plex Mono',monospace;font-size:11px">${d.Month||''}</td>
+      <td style="min-width:140px">${d.Customer_Name||''}</td>
+      <td style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--accent2)">${d.Grade_Clean||'–'}</td>
+      <td style="font-size:11px;color:var(--text-muted)">${d.Sector||''}</td>
+      <td><span style="font-size:10px;padding:2px 6px;border-radius:4px;background:rgba(255,255,255,0.07)">${d.Complaint_Type||''}</span></td>
+      <td style="color:var(--text-muted);min-width:160px">${d.Nature||'–'}</td>
+      <td style="color:var(--text-muted)">${d.Region||'Export'}</td>
+      <td style="font-size:11px;min-width:130px">${d.Sales_Person||''}</td>
+      <td class="wrap-cell" style="color:var(--text-muted);font-size:11px">${d.Description||''}</td>
+    </tr>
+  `).join('');
+}
+
+['f-fy','f-month','f-region','f-sector','f-grade','f-type','f-nature','f-customer'].forEach(id => {
+  document.getElementById(id).addEventListener('change', render);
+});
+
+populateFilters(RAW);
+render();
+
+// Password handled by early script block above
+
+// ── CHART DOWNLOAD ────────────────────────────────────
+function downloadChart(canvasId, fileName, titleText) {
+  const canvas = document.getElementById(canvasId);
+  if (!canvas) return;
+  // Use the CSS display size (not device-pixel canvas size) for clean output
+  const dpr = window.devicePixelRatio || 1;
+  const scale = 2; // export at 2x for sharpness
+  const srcW = canvas.width;   // already dpr-scaled by Chart.js
+  const srcH = canvas.height;
+  const HEADER = Math.round(60 * scale);
+  const FOOTER = Math.round(28 * scale);
+  const offscreen = document.createElement('canvas');
+  offscreen.width  = srcW * scale / dpr;
+  offscreen.height = srcH * scale / dpr + HEADER + FOOTER;
+  const ctx2 = offscreen.getContext('2d');
+  const OW = offscreen.width, OH = offscreen.height;
+
+  // Background
+  ctx2.fillStyle = '#1c2128';
+  ctx2.fillRect(0, 0, OW, OH);
+
+  // Top accent bar
+  ctx2.fillStyle = '#f0883e';
+  ctx2.fillRect(0, 0, OW, 3 * scale);
+
+  // Org name
+  ctx2.font = `bold ${13*scale}px "IBM Plex Sans", Arial, sans-serif`;
+  ctx2.fillStyle = '#f0883e';
+  ctx2.fillText('HSCL — Customer Complaints Dashboard', 12*scale, (3+16)*scale);
+
+  // Chart title
+  ctx2.font = `${10*scale}px "IBM Plex Sans", Arial, sans-serif`;
+  ctx2.fillStyle = '#e6edf3';
+  ctx2.fillText(titleText, 12*scale, (3+30)*scale);
+
+  // Separator line
+  ctx2.strokeStyle = 'rgba(48,54,61,0.8)';
+  ctx2.lineWidth = 1 * scale;
+  ctx2.beginPath();
+  ctx2.moveTo(0, HEADER - 4*scale);
+  ctx2.lineTo(OW, HEADER - 4*scale);
+  ctx2.stroke();
+
+  // Draw the chart scaled up for sharpness
+  ctx2.drawImage(canvas, 0, HEADER, OW, srcH * scale / dpr);
+
+  // Footer separator
+  ctx2.strokeStyle = 'rgba(48,54,61,0.6)';
+  ctx2.beginPath();
+  ctx2.moveTo(0, OH - FOOTER);
+  ctx2.lineTo(OW, OH - FOOTER);
+  ctx2.stroke();
+
+  // Footer text
+  const fy = document.getElementById('f-fy').value;
+  const filters = fy === 'ALL' ? 'FY2024-25 & FY2025-26 (Combined)' : fy;
+  const dated = new Date().toLocaleDateString('en-IN', {day:'2-digit',month:'short',year:'numeric'});
+  ctx2.font = `${8*scale}px "IBM Plex Mono", monospace`;
+  ctx2.fillStyle = 'rgba(139,148,158,0.85)';
+  ctx2.fillText('Filter: ' + filters + '   |   Himadri Speciality Chemical Limited   |   ' + dated, 12*scale, OH - 8*scale);
+
+  const link = document.createElement('a');
+  link.download = fileName + '.png';
+  link.href = offscreen.toDataURL('image/png', 1.0);
+  link.click();
+}
+
+// ── EXCEL DOWNLOAD ────────────────────────────────────
+function downloadExcel() {
+  const data = getFiltered();
+  const headers = ['#','Financial Year','Month','Customer Name','Grade','Sector','Complaint Type','Nature','Region','Sales Person','Description'];
+  const rows = data.map((d,i) => [
+    i+1, d.FY||'', d.Month||'', d.Customer_Name||'', d.Grade_Clean||'',
+    d.Sector||'', d.Complaint_Type||'', d.Nature||'', d.Region||'',
+    d.Sales_Person||'', d.Description||''
+  ]);
+
+  // Build CSV with BOM for Excel
+  const bom = '\uFEFF';
+  const escape = v => { const s = String(v); return s.includes(',') || s.includes('"') || s.includes('\n') ? '"' + s.replace(/"/g,'""') + '"' : s; };
+  const csvRows = [headers, ...rows].map(r => r.map(escape).join(','));
+  const csv = bom + csvRows.join('\r\n');
+
+  // Add summary sheet info as comments at top
+  const fy = document.getElementById('f-fy').value;
+  const totalFY1 = data.filter(d=>d.FY==='FY2024-25').length;
+  const totalFY2 = data.filter(d=>d.FY==='FY2025-26').length;
+  const summaryRows = [
+    ['HSCL - Customer Complaints Report','','','','','','','','','',''],
+    ['Himadri Speciality Chemical Limited','','','','','','','','','',''],
+    ['Filter Applied: ' + (fy==='ALL'?'Both Financial Years':fy),'','','','','','','','','',''],
+    ['FY2024-25 Records: ' + totalFY1,'FY2025-26 Records: ' + totalFY2,'Total: ' + data.length,'','','','','','','',''],
+    ['Generated on: ' + new Date().toLocaleDateString('en-IN'),'','','','','','','','','',''],
+    ['','','','','','','','','','',''],
+    headers,
+    ...rows
+  ];
+  const fullCsv = bom + summaryRows.map(r=>r.map(escape).join(',')).join('\r\n');
+
+  const blob = new Blob([fullCsv], { type: 'text/csv;charset=utf-8;' });
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+  const fyStr = fy === 'ALL' ? 'Both_FY' : fy;
+  link.download = `HSCL_Complaints_${fyStr}_${new Date().toISOString().slice(0,10)}.csv`;
+  link.click();
+}
+
+// ── PPT DOWNLOAD ──────────────────────────────────────
+async function downloadPPT() {
+  const data = getFiltered();
+  const fy = document.getElementById('f-fy').value;
+  const fyLabel = fy === 'ALL' ? 'FY2024-25 & FY2025-26' : fy;
+  const dated = new Date().toLocaleDateString('en-IN', {day:'2-digit', month:'short', year:'numeric'});
+
+  // Count helpers
+  const cnt = (arr, key) => { const m={}; arr.forEach(d=>{const v=d[key]||'N/A'; m[v]=(m[v]||0)+1;}); return m; };
+  const topN = (obj, n) => Object.entries(obj).sort((a,b)=>b[1]-a[1]).slice(0,n);
+  const fy1 = data.filter(d=>d.FY==='FY2024-25');
+  const fy2 = data.filter(d=>d.FY==='FY2025-26');
+
+  // Capture all chart canvases as base64
+  const chartIds = ['chartMonthly','chartTypeBar','chartRegion','chartGrade','chartSector','chartSP','chartNature','chartNatureChange'];
+  const chartImgs = {};
+  for (const id of chartIds) {
+    const c = document.getElementById(id);
+    if (c) chartImgs[id] = c.toDataURL('image/png', 0.95);
+  }
+
+  // Build HTML-based PPT export via data URI (opens in browser, saveable as .html for PPT-like viewing)
+  // We'll create a proper multi-slide HTML that looks like a presentation
+  const DARK = '#0d1117';
+  const SURFACE = '#161b22';
+  const BORDER = '#30363d';
+  const ACCENT = '#f0883e';
+  const BLUE = '#58a6ff';
+  const TEXT = '#e6edf3';
+  const MUTED = '#8b949e';
+  const GREEN = '#3fb950';
+
+  const topTypes = topN(cnt(data,'Complaint_Type'), 5);
+  const topNatures = topN(cnt(data,'Nature'), 8);
+  const topCustomers = topN(cnt(data,'Customer_Name'), 6);
+  const topGrades = {};
+  data.forEach(d=>{ if(!d.Grade_Clean) return; d.Grade_Clean.split(',').forEach(g=>{g=g.trim();if(g)topGrades[g]=(topGrades[g]||0)+1;}); });
+  const topGradeList = topN(topGrades, 6);
+  const topRegions = topN(cnt(data,'Region'), 6);
+
+  function kpiCard(label, val, sub, color='#58a6ff') {
+    return `<div style="background:${SURFACE};border:1px solid ${BORDER};border-radius:10px;padding:20px;flex:1;border-top:3px solid ${color}">
+      <div style="font-size:11px;color:${MUTED};font-weight:600;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px">${label}</div>
+      <div style="font-size:32px;font-weight:800;color:${TEXT};font-family:monospace">${val}</div>
+      <div style="font-size:11px;color:${MUTED};margin-top:4px">${sub}</div>
+    </div>`;
+  }
+
+  function barRow(label, val, max, color, pct) {
+    const width = Math.max(2, Math.round((val/max)*100));
+    return `<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+      <div style="width:160px;font-size:12px;color:${TEXT};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex-shrink:0">${label}</div>
+      <div style="flex:1;background:rgba(255,255,255,0.06);border-radius:4px;height:20px;position:relative">
+        <div style="background:${color};width:${width}%;height:100%;border-radius:4px"></div>
+      </div>
+      <div style="width:30px;text-align:right;font-size:12px;color:${TEXT};font-family:monospace;font-weight:600">${val}</div>
+    </div>`;
+  }
+
+  function slide(title, subtitle, content, slideNum, total) {
+    return `<div style="width:960px;min-height:540px;background:${DARK};padding:44px 52px;box-sizing:border-box;page-break-after:always;position:relative;font-family:'Segoe UI',Arial,sans-serif">
+      <div style="position:absolute;top:0;left:0;right:0;height:4px;background:linear-gradient(90deg,${ACCENT},${BLUE})"></div>
+      <div style="margin-bottom:28px">
+        <div style="font-size:20px;font-weight:800;color:${TEXT}">${title}</div>
+        ${subtitle ? `<div style="font-size:12px;color:${MUTED};margin-top:4px">${subtitle}</div>` : ''}
+      </div>
+      ${content}
+      <div style="position:absolute;bottom:16px;right:24px;font-size:10px;color:rgba(139,148,158,0.5)">HSCL Complaints Dashboard  ·  ${fyLabel}  ·  ${dated}  ·  ${slideNum}/${total}</div>
+      <div style="position:absolute;bottom:16px;left:24px;font-size:10px;color:rgba(240,136,62,0.5)">Himadri Speciality Chemical Limited</div>
+    </div>`;
+  }
+
+  const maxType = Math.max(...topTypes.map(t=>t[1]), 1);
+  const maxNat = Math.max(...topNatures.map(n=>n[1]), 1);
+  const maxCust = Math.max(...topCustomers.map(c=>c[1]), 1);
+  const maxGrade = Math.max(...topGradeList.map(g=>g[1]), 1);
+  const maxRegion = Math.max(...topRegions.map(r=>r[1]), 1);
+  const COLORS_LIST = [BLUE, ACCENT, GREEN, '#d2a8ff','#ff7b72','#e3b341'];
+
+  const chg = fy1.length > 0 ? Math.round((fy2.length - fy1.length) / fy1.length * 100) : 0;
+  const topType = topN(cnt(data,'Complaint_Type'), 1)[0];
+  const topCust = topN(cnt(data,'Customer_Name'), 1)[0];
+  const chgColor = chg > 0 ? '#ff7b72' : '#3fb950';
+
+  const slides = [];
+
+  // Slide 1: Title
+  slides.push(slide(
+    'Customer Complaints Analysis',
+    `Himadri Speciality Chemical Limited (HSCL) &nbsp;·&nbsp; ${fyLabel} &nbsp;·&nbsp; Generated: ${dated}`,
+    `<div style="margin-top:30px;display:flex;gap:16px">
+      ${kpiCard('FY 2024-25', fy1.length, 'Total Complaints', BLUE)}
+      ${kpiCard('FY 2025-26', fy2.length, 'Total Complaints', ACCENT)}
+      ${kpiCard('YoY Change', (chg>=0?'+':'')+chg+'%', 'vs last year', chg>0?'#ff7b72':'#3fb950')}
+      ${kpiCard('Top Issue', topType?topType[0]:'-', topType?topType[1]+' complaints':'-', '#d2a8ff')}
+      ${kpiCard('Most Complaints', topCust?topCust[0].split(' ').slice(0,2).join(' '):'-', topCust?topCust[1]+' total':'-', '#e3b341')}
+    </div>
+    <div style="margin-top:24px;background:rgba(88,166,255,0.07);border:1px solid rgba(88,166,255,0.2);border-radius:8px;padding:14px 20px;font-size:12px;color:${MUTED}">
+      Total records in current filter: <span style="color:${TEXT};font-weight:700">${data.length}</span> complaints across <span style="color:${TEXT};font-weight:700">${new Set(data.map(d=>d.Customer_Name)).size}</span> customers and <span style="color:${TEXT};font-weight:700">${new Set(data.map(d=>d.Region)).size}</span> regions.
+    </div>`,
+    1, 6
+  ));
+
+  // Slide 2: Monthly Trend chart
+  slides.push(slide(
+    'Monthly Complaint Trend',
+    'Month-wise count comparison: FY2024-25 vs FY2025-26',
+    chartImgs['chartMonthly']
+      ? `<img src="${chartImgs['chartMonthly']}" style="width:100%;border-radius:8px;background:${SURFACE};padding:12px;box-sizing:border-box" />`
+      : '<div style="color:'+MUTED+';text-align:center;padding:60px">Chart not available</div>',
+    2, 6
+  ));
+
+  // Slide 3: Type + Region side by side
+  slides.push(slide(
+    'Complaint Type & Region Breakdown',
+    'Distribution by type and geography',
+    `<div style="display:flex;gap:24px">
+      <div style="flex:1">
+        <div style="font-size:12px;color:${MUTED};font-weight:600;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:14px">By Complaint Type</div>
+        ${topTypes.map(([t,v])=>barRow(t, v, maxType, BLUE, v)).join('')}
+      </div>
+      <div style="flex:1">
+        <div style="font-size:12px;color:${MUTED};font-weight:600;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:14px">By Region</div>
+        ${topRegions.map(([r,v],i)=>barRow(r, v, maxRegion, COLORS_LIST[i%COLORS_LIST.length], v)).join('')}
+      </div>
+    </div>`,
+    3, 6
+  ));
+
+  // Slide 4: Top Natures
+  slides.push(slide(
+    'Top Complaint Natures',
+    'Most frequent issue categories across both financial years',
+    `<div style="columns:2;gap:24px">
+      ${topNatures.map(([n,v],i)=>barRow(n, v, maxNat, COLORS_LIST[i%COLORS_LIST.length], v)).join('')}
+    </div>`,
+    4, 6
+  ));
+
+  // Slide 5: Nature YoY change + Grade
+  slides.push(slide(
+    'Nature YoY Change & Grade Analysis',
+    'Which issues increased/decreased and which grades drive complaints',
+    `<div style="display:flex;gap:24px">
+      <div style="flex:1">
+        <div style="font-size:12px;color:${MUTED};font-weight:600;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:14px">Top Grades by Complaints</div>
+        ${topGradeList.map(([g,v],i)=>barRow(g, v, maxGrade, COLORS_LIST[i%COLORS_LIST.length], v)).join('')}
+      </div>
+      <div style="flex:1">
+        <div style="font-size:12px;color:${MUTED};font-weight:600;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:14px">Top Repeat Customers</div>
+        ${topCustomers.map(([c,v],i)=>{const fy1c=fy1.filter(d=>d.Customer_Name===c).length;const fy2c=fy2.filter(d=>d.Customer_Name===c).length;return `<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+          <div style="width:130px;font-size:11px;color:${TEXT};flex-shrink:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${c}</div>
+          <span style="background:rgba(88,166,255,0.15);color:${BLUE};font-size:9px;padding:2px 6px;border-radius:4px;font-family:monospace">${fy1c}</span>
+          <span style="background:rgba(240,136,62,0.15);color:${ACCENT};font-size:9px;padding:2px 6px;border-radius:4px;font-family:monospace">${fy2c}</span>
+          <span style="font-size:12px;color:${TEXT};font-family:monospace;font-weight:700;margin-left:auto">${v}</span>
+        </div>`; }).join('')}
+      </div>
+    </div>`,
+    5, 6
+  ));
+
+  // Slide 6: Sales Person
+  slides.push(slide(
+    'Sales Person Performance',
+    'Complaint load per responsible sales person (FY comparison)',
+    chartImgs['chartSP']
+      ? `<img src="${chartImgs['chartSP']}" style="width:100%;border-radius:8px;background:${SURFACE};padding:12px;box-sizing:border-box" />`
+      : '<div style="color:'+MUTED+';text-align:center;padding:60px">Chart not available</div>',
+    6, 6
+  ));
+
+  const html = `<!DOCTYPE html><html><head><meta charset="UTF-8">
+<title>HSCL Complaints PPT — ${fyLabel}</title>
+<style>
+  @page { size: 960px 560px; margin: 0; }
+  body { margin: 0; padding: 0; background: #000; }
+  @media print { body { background: #000; } }
+</style>
+</head><body>
+${slides.join('\n')}
+<script>
+  // Print hint
+  setTimeout(()=>{
+    const hint = document.createElement('div');
+    hint.style.cssText = 'position:fixed;bottom:20px;right:20px;background:#161b22;border:1px solid #30363d;color:#8b949e;padding:12px 18px;border-radius:8px;font-family:Arial;font-size:13px;z-index:9999';
+    hint.innerHTML = '💡 Press <strong style=color:#e6edf3>Ctrl+P</strong> to Print / Save as PDF';
+    document.body.appendChild(hint);
+    setTimeout(()=>hint.remove(), 6000);
+  }, 500);
+<\/script>
+</body></html>`;
+
+  const blob = new Blob([html], {type:'text/html;charset=utf-8'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `HSCL_Complaints_${fyLabel.replace(/[^a-z0-9]/gi,'_')}_${new Date().toISOString().slice(0,10)}.html`;
+  a.click();
+}
+</script>
+</body>
+</html>
